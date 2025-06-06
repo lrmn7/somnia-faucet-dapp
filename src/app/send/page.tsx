@@ -85,7 +85,7 @@ export default function SendPage() {
 
     try {
       await sendTransactionAsync({
-        to: `0x${recipient}`,
+        to: recipient as `0x${string}`,
         value: parseEther(amount),
       });
 
