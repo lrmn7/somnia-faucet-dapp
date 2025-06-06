@@ -10,7 +10,12 @@ const ClientOnlyProviders = dynamic(() => import("@/app/providers-client"), { ss
 
 export const metadata: Metadata = {
   title: "Somceut",
-  description: "Faucet, Contract Deployer, and Admin Panel on Somnia Testnet.",
+  description: "need some test tokens? wanna send a tx? this lil site got u covered. no fluff, just vibes 🧃",
+  icons: {
+    icon: "/avatar.png",
+    shortcut: "/avatar.png",
+    apple: "/avatar.png",
+  },
 };
 
 export default function RootLayout({
