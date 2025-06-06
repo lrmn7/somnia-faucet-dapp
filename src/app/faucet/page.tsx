@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useReadContract, useBalance } from 'wagmi';
-import { formatEther, type BigNumberish } from 'ethers';
+import { formatEther } from 'ethers';
 import toast from 'react-hot-toast';
 
 import PixelatedButton from '@/components/PixelatedButton';
@@ -52,11 +52,20 @@ export default function FaucetPage() {
         return parts.join(' ');
     };
 
+    // Perbaikan utama di sini:
     const formatDuration = (totalSeconds: number): string => {
-        if (totalSeconds === 43200) return "every 12 hours";
-        if (totalSeconds === 86400) return "every 24 hours";
-        if (totalSeconds === 3600) return "every 1 hour";
-        return `every ${totalSeconds} seconds`;
+        if (totalSeconds <= 0) return '';
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = Math.floor(totalSeconds % 60);
+        let parts: string[] = [];
+
+        if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+        if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+        if (seconds > 0 && hours === 0) parts.push(`${seconds} second${seconds > 1 ? 's' : ''}`); 
+        // Tampilkan detik hanya kalau gak ada jam (biar ringkas)
+
+        return `every ${parts.join(' ')}`;
     };
 
     useEffect(() => {
@@ -145,8 +154,7 @@ export default function FaucetPage() {
                     </PixelatedButton>
                     {isConnected && (
                         <p className="mt-4 text-sm">
-                            You can claim {typeof claimAmount === 'bigint' ? `${formatEther(claimAmount)} STT` : '...'} 
-                            {' '}
+                            You can claim {typeof claimAmount === 'bigint' ? `${formatEther(claimAmount)} STT` : '...'}{' '}
                             {cooldownTime !== undefined ? formatDuration(Number(cooldownTime)) : '...'}.
                         </p>
                     )}
