@@ -10,7 +10,7 @@ const AppNavbar = () => {
       <nav className="bg-brand-dark border-b-2 border-black p-4">
         <div className="container mx-auto flex justify-between items-center">
           <Link href="/" className="text-xl font-pixel text-brand-orange">
-            Somceut
+            Somcet
           </Link>
           <ConnectButton.Custom>
             {({

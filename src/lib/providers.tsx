@@ -10,7 +10,7 @@ import { CustomAvatar } from '@/constants/avatar';
 import { Disclaimer } from '@/constants/disclaimer';
 
 const config = getDefaultConfig({
-  appName: 'Somceut',
+  appName: 'Somcet',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
   chains: [somniaTestnet],
   ssr: false,

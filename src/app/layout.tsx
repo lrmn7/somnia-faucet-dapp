@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 const ClientOnlyProviders = dynamic(() => import("@/app/providers-client"), { ssr: false });
 
 export const metadata: Metadata = {
-  title: "Somceut",
+  title: "Somcet",
   description: "need some test tokens? wanna send a tx? this lil site got u covered. no fluff, just vibes 🧃",
   icons: {
     icon: "/avatar.png",
