@@ -32,7 +32,7 @@ const AppFooter = () => {
         { href: 'https://auctsom.vercel.app', label: 'AuctSom', isExternal: true },
         { href: 'https://funquiz.vercel.app/', label: 'FunQuiz', isExternal: true },
         { href: 'https://funmint.vercel.app/', label: 'FunMint', isExternal: true },
-        { href: 'https://yourbefun.vercel.app/', label: 'YourBeFun', isExternal: true },
+        { href: 'https://somfeed.vercel.app/', label: 'Somfeed', isExternal: true },
         { href: 'https://gsomnia-clicks.vercel.app/', label: 'gSomnia Clicks', isExternal: true },
       ],
     },
