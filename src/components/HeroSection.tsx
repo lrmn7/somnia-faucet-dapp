@@ -32,7 +32,7 @@ const HeroSection = () => {
           <PixelatedButton>Faucet</PixelatedButton>
         </Link>
         <Link href="/deploy">
-          <PixelatedButton>Send</PixelatedButton>
+          <PixelatedButton>Deploy</PixelatedButton>
         </Link>
       </div>
     </section>
