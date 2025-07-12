@@ -41,8 +41,18 @@ export default function DeployPage() {
     const handleDeploy = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!isConnected || !walletClient || !tokenName || !tokenSymbol) {
-            toast.error('Please ensure your wallet is connected and all fields are filled.');
+        // Trim whitespace from inputs
+        const trimmedTokenName = tokenName.trim();
+        const trimmedTokenSymbol = tokenSymbol.trim();
+
+        if (!isConnected || !walletClient) {
+            toast.error('Please connect your wallet first!');
+            return;
+        }
+
+        // Validate trimmed inputs
+        if (!trimmedTokenName || !trimmedTokenSymbol) {
+            toast.error('Token Name and Symbol cannot be empty.');
             return;
         }
 
@@ -53,7 +63,7 @@ export default function DeployPage() {
 
         setIsDeploying(true);
         setDeployedAddress(null);
-        const toastId = toast.loading('Please wait, deploying...');
+        const toastId = toast.loading('Please wait, deploying contract...');
 
         try {
             const provider = new BrowserProvider(walletClient.transport, {
@@ -61,40 +71,45 @@ export default function DeployPage() {
                 chainId: walletClient.chain.id,
             });
             const signer = await provider.getSigner();
-            const contract = contractType === 'ERC20' ? ERC20Contract : ERC721Contract;
+            const contractToDeploy = contractType === 'ERC20' ? ERC20Contract : ERC721Contract;
 
-            if (!contract.bytecode || contract.bytecode === '0x') {
-                 toast.error('Deployment failed: Contract bytecode is missing.', { id: toastId });
-                 setIsDeploying(false);
-                 return;
+            if (!contractToDeploy.bytecode || contractToDeploy.bytecode === '0x') {
+                toast.error('Deployment failed: Contract bytecode is missing or empty. Please check your contract compilation.', { id: toastId });
+                setIsDeploying(false);
+                return;
             }
 
             let args: any[];
             if (contractType === 'ERC20') {
                 const supplyInWei = parseUnits(DEFAULT_ERC20_SUPPLY, DEFAULT_TOKEN_DECIMALS);
-                args = [tokenName, tokenSymbol, supplyInWei];
+                args = [trimmedTokenName, trimmedTokenSymbol, supplyInWei];
             } else {
-                args = [tokenName, tokenSymbol];
+                args = [trimmedTokenName, trimmedTokenSymbol];
             }
 
-            const factory = new ContractFactory(contract.abi, contract.bytecode, signer);
+            console.log("Attempting to deploy contract with type:", contractType);
+            console.log("Deployment arguments:", args);
+
+            const factory = new ContractFactory(contractToDeploy.abi, contractToDeploy.bytecode, signer);
             const deployedContract = await factory.deploy(...args);
+            
+            toast.loading('Waiting for deployment confirmation...', { id: toastId });
             await deployedContract.waitForDeployment();
 
             const address = await deployedContract.getAddress();
             setDeployedAddress(address);
-            toast.success('Deployment successful!', { id: toastId });
+            toast.success(`Deployment successful! Contract Address: ${address}`, { id: toastId });
 
         } catch (error: any) {
-            console.error(error);
-            const errorMessage = error.shortMessage || error.message || 'An unknown error occurred';
-            toast.error(`Deployment failed: ${errorMessage}`, { id: toastId });
+            console.error('Deployment error:', error);
+            const errorMessage = error.shortMessage || error.message || 'An unknown error occurred.';
+            toast.error(`Deployment failed: ${errorMessage}. Please check console for details.`, { id: toastId });
         } finally {
             setIsDeploying(false);
         }
     };
 
-    const isButtonDisabled = !isConnected || isDeploying || !tokenName || !tokenSymbol;
+    const isButtonDisabled = isDeploying || !isConnected || !tokenName.trim() || !tokenSymbol.trim();
 
     const getButtonText = (): string => {
         if (isDeploying) {
@@ -103,34 +118,34 @@ export default function DeployPage() {
         if (!isConnected) {
             return 'Connect Wallet to Deploy';
         }
-        if (!tokenName || !tokenSymbol) {
-            return 'Fill in All Fields';
+        if (!tokenName.trim() || !tokenSymbol.trim()) {
+            return 'Enter Token Details';
         }
         return 'Deploy Contract';
     };
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto p-4">
             <PixelatedCard>
-                <h1 className="text-3xl text-center mb-6">Deploy a Contract</h1>
+                <h1 className="text-3xl text-center mb-6 font-pixel">Deploy a Contract</h1>
 
                 <div className="flex justify-center mb-6 border-2 border-black">
-                    <button onClick={() => setContractType('ERC20')} className={`flex-1 p-3 font-pixel ${contractType === 'ERC20' ? 'bg-brand-orange text-white' : 'bg-stone-700'}`}>
-                        ERC20 Token
+                    <button onClick={() => setContractType('ERC20')} className={`flex-1 p-3 font-pixel ${contractType === 'ERC20' ? 'bg-orange-400 text-stone-900' : 'bg-stone-700 text-white hover:bg-stone-600'}`}>
+                        ERC20
                     </button>
-                    <button onClick={() => setContractType('ERC721')} className={`flex-1 p-3 font-pixel ${contractType === 'ERC721' ? 'bg-brand-orange text-white' : 'bg-stone-700'}`}>
-                        ERC721 NFT
+                    <button onClick={() => setContractType('ERC721')} className={`flex-1 p-3 font-pixel ${contractType === 'ERC721' ? 'bg-orange-400 text-stone-900' : 'bg-stone-700 text-white hover:bg-stone-600'}`}>
+                        ERC721
                     </button>
                 </div>
 
                 <form onSubmit={handleDeploy} className="space-y-4">
                     <div>
                         <label className="block mb-1 font-pixel text-sm">Token Name</label>
-                        <input type="text" value={tokenName} onChange={e => setTokenName(e.target.value)} placeholder="My Pixel Token" className="w-full bg-stone-900 p-3 border-2 border-black focus:outline-none focus:border-brand-orange" />
+                        <input type="text" value={tokenName} onChange={e => setTokenName(e.target.value)} placeholder="My Token Name" className="w-full bg-stone-900 p-3 border-2 border-black text-white focus:outline-none focus:border-orange-400" />
                     </div>
                     <div>
                         <label className="block mb-1 font-pixel text-sm">Token Symbol</label>
-                        <input type="text" value={tokenSymbol} onChange={e => setTokenSymbol(e.target.value)} placeholder="MPT" className="w-full bg-stone-900 p-3 border-2 border-black focus:outline-none focus:border-brand-orange" />
+                        <input type="text" value={tokenSymbol} onChange={e => setTokenSymbol(e.target.value)} placeholder="MTOKEN" className="w-full bg-stone-900 p-3 border-2 border-black text-white focus:outline-none focus:border-orange-400" />
                     </div>
 
                     {contractType === 'ERC20' && (
@@ -154,6 +169,13 @@ export default function DeployPage() {
                         <PixelatedButton 
                             type="submit" 
                             disabled={isButtonDisabled}
+                            className={`w-full !text-lg !py-3 !border-2 transition-colors duration-200
+                                ${
+                                    isButtonDisabled
+                                        ? "!bg-stone-700 !text-stone-500 !border-stone-600 cursor-not-allowed"
+                                        : "!bg-orange-400 !text-stone-900 !border-black"
+                                }
+                            `}
                         >
                             {getButtonText()}
                         </PixelatedButton>
@@ -163,12 +185,13 @@ export default function DeployPage() {
                 {deployedAddress && (
                     <div className="mt-6 p-4 bg-green-900/50 border-2 border-green-500 text-center">
                         <h3 className="font-pixel text-lg text-green-300">Deployment Successful!</h3>
-                        <p className="mt-2 break-all">
+                        <p className="mt-2 break-all font-mono text-sm">
+                            Contract Address: <br/>
                             <Link
                                 href={`https://shannon-explorer.somnia.network/address/${deployedAddress}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-white underline hover:text-brand-orange"
+                                className="text-white underline hover:text-orange-400"
                             >
                                 {deployedAddress}
                             </Link>

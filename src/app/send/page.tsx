@@ -42,7 +42,6 @@ export default function SendPage() {
       }
     };
     fetchInitialLeaderboard();
-
     const eventSource = new EventSource("/api/stream");
 
     eventSource.onmessage = (event) => {
@@ -90,7 +89,6 @@ export default function SendPage() {
       });
 
       toast.success("Transaction successful!", { id: toastId });
-
       await fetch("/api/leaderboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -113,9 +111,14 @@ export default function SendPage() {
 
   const presetAmounts = ["0.005", "0.01", "0.1", "0.5"];
   const formatDynamicDecimal = (weiValue: string): string => {
-    const etherValue = formatEther(BigInt(weiValue));
-    const fixedValue = parseFloat(etherValue).toFixed(4);
-    return Number(fixedValue).toString();
+    try {
+      const etherValue = formatEther(BigInt(weiValue));
+      const fixedValue = parseFloat(etherValue).toFixed(4);
+      return Number(fixedValue).toString();
+    } catch (error) {
+      console.error("Error formatting weiValue:", weiValue, error);
+      return "N/A";
+    }
   };
 
   return (
@@ -165,13 +168,13 @@ export default function SendPage() {
                     key={val}
                     onClick={() => setAmount(val)}
                     className={`
-                                        p-2 font-pixel text-sm border-2 transition-colors duration-200
-                                        ${
-                                          amount === val
-                                            ? "bg-orange-400 text-stone-900 border-orange-600" // Style saat aktif
-                                            : "bg-stone-800 text-orange-400 border-stone-700 hover:bg-stone-700 hover:border-orange-500" // Style default
-                                        }
-                                      `}
+                      p-2 font-pixel text-sm border-2 transition-colors duration-200
+                      ${
+                        amount === val
+                          ? "bg-orange-400 text-stone-900 border-orange-600"
+                          : "bg-stone-800 text-orange-400 border-stone-700 hover:bg-stone-700 hover:border-orange-500"
+                      }
+                    `}
                   >
                     {val}
                   </button>
