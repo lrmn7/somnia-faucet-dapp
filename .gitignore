@@ -1,3 +1,13 @@
+# Hardhat files
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# Hardhat Ignition default folder for deployments against a local node
+ignition/deployments/chain-50312
 # dependencies
 /node_modules
 /.pnp
@@ -5,7 +15,7 @@
 
 # testing
 /coverage
-
+/coverage.json
 # next.js
 /.next/
 /out/
