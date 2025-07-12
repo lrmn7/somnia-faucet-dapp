@@ -1,17 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useSendTransaction, useBalance, useWalletClient } from "wagmi";
-import { parseEther, formatEther, isAddress, Contract, BrowserProvider } from "ethers";
+import {
+  useAccount,
+  useSendTransaction,
+  useBalance,
+  useWalletClient,
+} from "wagmi";
+import {
+  parseEther,
+  formatEther,
+  isAddress,
+  Contract,
+  BrowserProvider,
+} from "ethers";
 import toast from "react-hot-toast";
 
 import PixelatedButton from "@/components/PixelatedButton";
 import PixelatedCard from "@/components/PixelatedCard";
 
 const SOMNIA_TESTNET_CHAIN_ID = 50312;
-import { abiMultiSender } from '@/contracts/abis';
+import { abiMultiSender } from "@/contracts/abis";
 
-const MULTISENDER_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_MULTISENDER_CONTRACT_ADDRESS as `0x${string}` || "0x0000000000000000000000000000000000000000";
+const MULTISENDER_CONTRACT_ADDRESS = process.env
+  .NEXT_PUBLIC_MULTISENDER_CONTRACT_ADDRESS as `0x${string}`;
+
+// --- Variabel Lingkungan Baru untuk Explorer URL ---
+const EXPLORER_URL = process.env.NEXT_PUBLIC_EXPLORER_URL;
 
 interface LeaderboardEntry {
   _id: string;
@@ -20,21 +35,22 @@ interface LeaderboardEntry {
   totalSentWei: string;
 }
 
-type SendMode = 'single' | 'multi';
-type MultiSendAmountType = 'per_recipient' | 'total_distributed';
+type SendMode = "single" | "multi";
+type MultiSendAmountType = "per_recipient" | "total_distributed";
 
 export default function SendPage() {
   const { address, isConnected, chain } = useAccount();
   const { data: balance } = useBalance({ address });
-  const { sendTransactionAsync } = useSendTransaction(); // Untuk single send
-  const { data: walletClient } = useWalletClient(); // Untuk interaksi kontrak dengan Ethers.js
+  const { sendTransactionAsync } = useSendTransaction();
+  const { data: walletClient } = useWalletClient();
 
   const [recipient, setRecipient] = useState("");
-  const [amount, setAmount] = useState(""); 
-  const [multiRecipientsList, setMultiRecipientsList] = useState(""); 
-  const [multiSendAmountType, setMultiSendAmountType] = useState<MultiSendAmountType>('per_recipient'); 
-  const [sendMode, setSendMode] = useState<SendMode>('single'); 
-  
+  const [amount, setAmount] = useState("");
+  const [multiRecipientsList, setMultiRecipientsList] = useState("");
+  const [multiSendAmountType, setMultiSendAmountType] =
+    useState<MultiSendAmountType>("per_recipient");
+  const [sendMode, setSendMode] = useState<SendMode>("single");
+
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -74,7 +90,7 @@ export default function SendPage() {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isConnected || !address || !walletClient) { 
+    if (!isConnected || !address || !walletClient) {
       toast.error("Please connect your wallet first!");
       return;
     }
@@ -83,12 +99,14 @@ export default function SendPage() {
       return;
     }
 
-    const toastId = toast.loading("Processing your transaction(s)...", { duration: 0 }); 
+    const toastId = toast.loading("Processing your transaction(s)...", {
+      duration: 0,
+    });
     setIsLoading(true);
 
     try {
-      if (sendMode === 'single') {
-        // Logika untuk Single Send (tidak berubah)
+      if (sendMode === "single") {
+        // Logika untuk Single Send
         if (!isAddress(recipient)) {
           toast.error("Invalid recipient address!", { id: toastId });
           return;
@@ -98,12 +116,30 @@ export default function SendPage() {
           return;
         }
 
-        await sendTransactionAsync({
+        // --- Perubahan di sini untuk mendapatkan Tx Hash ---
+        const hash = await sendTransactionAsync({
           to: recipient as `0x${string}`,
           value: parseEther(amount),
         });
 
-        toast.success("Transaction successful!", { id: toastId });
+        // Tampilkan Tx Hash di notifikasi sukses
+        toast.success(
+          (t) => (
+            <div>
+              Transaction successful!
+              <br />
+              <a
+                href={`${EXPLORER_URL}/tx/${hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                View on Explorer
+              </a>
+            </div>
+          ),
+          { id: toastId, duration: 8000 }
+        );
 
         await fetch("/api/leaderboard", {
           method: "POST",
@@ -113,13 +149,13 @@ export default function SendPage() {
 
         setRecipient("");
         setAmount("");
-
       } else {
+        // sendMode === 'multi'
         const recipientAddresses = multiRecipientsList
-          .split(',')
-          .map(addr => addr.trim())
-          .filter(addr => addr !== '');
-        
+          .split(",")
+          .map((addr) => addr.trim())
+          .filter((addr) => addr !== "");
+
         if (recipientAddresses.length === 0) {
           toast.error("No recipients entered for multi-send!", { id: toastId });
           return;
@@ -127,64 +163,83 @@ export default function SendPage() {
 
         const parsedAmount = parseFloat(amount);
         if (isNaN(parsedAmount) || parsedAmount <= 0) {
-          toast.error("Invalid amount entered for multi-send!", { id: toastId });
+          toast.error("Invalid amount entered for multi-send!", {
+            id: toastId,
+          });
           return;
         }
 
-        let amountsForContract: bigint[] = []; 
-        let totalAmountForContract: bigint = BigInt(0); 
+        let amountsForContract: bigint[] = [];
+        let totalAmountForContract: bigint = BigInt(0);
 
-        if (multiSendAmountType === 'per_recipient') {
-          const amountWeiPerRecipient = parseEther(amount); 
+        if (multiSendAmountType === "per_recipient") {
+          const amountWeiPerRecipient = parseEther(amount);
           for (const addr of recipientAddresses) {
             if (!isAddress(addr)) {
-              toast.error(`Invalid recipient address: ${addr}`, { id: toastId });
+              toast.error(`Invalid recipient address: ${addr}`, {
+                id: toastId,
+              });
               return;
             }
             amountsForContract.push(amountWeiPerRecipient);
             totalAmountForContract += amountWeiPerRecipient;
           }
         } else {
+          // total_distributed
           const totalAmountWei = parseEther(amount);
-          // Pastikan tidak ada pembagian dengan nol
           if (recipientAddresses.length === 0) {
-              toast.error("Cannot distribute to zero recipients.", { id: toastId });
-              return;
+            toast.error("Cannot distribute to zero recipients.", {
+              id: toastId,
+            });
+            return;
           }
-          const amountWeiPerRecipient = totalAmountWei / BigInt(recipientAddresses.length);
-          
+          const amountWeiPerRecipient =
+            totalAmountWei / BigInt(recipientAddresses.length);
+
           if (amountWeiPerRecipient <= BigInt(0)) {
-              toast.error("Total amount is too small to distribute among recipients! Consider more amount or fewer recipients.", { id: toastId, duration: 5000 });
-              return;
+            toast.error(
+              "Total amount is too small to distribute among recipients! Consider more amount or fewer recipients.",
+              { id: toastId, duration: 5000 }
+            );
+            return;
           }
-          
-          // Hitung sisa jika pembagian tidak tepat, tambahkan ke penerima pertama
+
           const remainder = totalAmountWei % BigInt(recipientAddresses.length);
 
           for (let i = 0; i < recipientAddresses.length; i++) {
             const addr = recipientAddresses[i];
             if (!isAddress(addr)) {
-              toast.error(`Invalid recipient address: ${addr}`, { id: toastId });
+              toast.error(`Invalid recipient address: ${addr}`, {
+                id: toastId,
+              });
               return;
             }
             let currentAmount = amountWeiPerRecipient;
-            // Tambahkan sisa ke penerima pertama untuk memastikan semua dana terdistribusi
             if (i === 0) {
-                currentAmount += remainder;
+              currentAmount += remainder;
             }
             amountsForContract.push(currentAmount);
             totalAmountForContract += currentAmount;
           }
         }
-        
+
         if (totalAmountForContract === BigInt(0)) {
-            toast.error("Calculated total amount to send is zero. Please check inputs.", { id: toastId });
-            return;
+          toast.error(
+            "Calculated total amount to send is zero. Please check inputs.",
+            { id: toastId }
+          );
+          return;
         }
 
-        if (MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
-            toast.error("MultiSender contract address is not configured. Please deploy the contract and update the code.", { id: toastId, duration: 8000 });
-            return;
+        if (
+          MULTISENDER_CONTRACT_ADDRESS ===
+          "0x0000000000000000000000000000000000000000"
+        ) {
+          toast.error(
+            "MultiSender contract address is not configured. Please deploy the contract and update the code.",
+            { id: toastId, duration: 8000 }
+          );
+          return;
         }
 
         // --- Panggil kontrak Multisender ---
@@ -194,42 +249,72 @@ export default function SendPage() {
         });
         const signer = await provider.getSigner();
 
-        const multiSenderContract = new Contract(MULTISENDER_CONTRACT_ADDRESS, abiMultiSender, signer);
-
-        // Panggil fungsi multiSendNative dari kontrak Multisender
-        const txResponse = await multiSenderContract.multiSendNative(
-          recipientAddresses, 
-          amountsForContract, 
-          { value: totalAmountForContract } 
+        const multiSenderContract = new Contract(
+          MULTISENDER_CONTRACT_ADDRESS,
+          abiMultiSender,
+          signer
         );
 
-        toast.loading("Waiting for multi-send transaction confirmation...", { id: toastId, duration: 0 });
-        await txResponse.wait(); // Tunggu hingga transaksi dikonfirmasi
+        // --- Perubahan di sini untuk mendapatkan Tx Hash dari multi-send ---
+        const txResponse = await multiSenderContract.multiSendNative(
+          recipientAddresses,
+          amountsForContract,
+          { value: totalAmountForContract }
+        );
 
-        toast.success(`Multi-send successful! Sent to ${recipientAddresses.length} recipients.`, { id: toastId });
+        toast.loading("Waiting for multi-send transaction confirmation...", {
+          id: toastId,
+          duration: 0,
+        });
+        const receipt = await txResponse.wait(); // Tunggu hingga transaksi dikonfirmasi dan dapatkan receipt
+
+        // Tampilkan Tx Hash di notifikasi sukses untuk multi-send
+        toast.success(
+          (t) => (
+            <div>
+              Multi-send successful! Sent to {recipientAddresses.length}{" "}
+              recipients.
+              <br />
+              <a
+                href={`${EXPLORER_URL}/tx/${receipt.hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                View on Explorer
+              </a>
+            </div>
+          ),
+          { id: toastId, duration: 8000 }
+        );
 
         await fetch("/api/leaderboard", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            senderAddress: address, 
-            amountSent: formatEther(totalAmountForContract)
+          body: JSON.stringify({
+            senderAddress: address,
+            amountSent: formatEther(totalAmountForContract),
           }),
         });
 
         setMultiRecipientsList("");
-        setAmount(""); 
+        setAmount("");
       }
-
     } catch (error: any) {
-      console.error('Transaction error:', error); 
-      const errorMessage = error.shortMessage || error.message || 'An unknown error occurred.';
-      if (errorMessage.includes("insufficient funds") || errorMessage.includes("gas required exceeds allowance")) {
-        toast.error("Insufficient balance for total amount or gas fees. Please check your balance.", { id: toastId, duration: 8000 });
+      console.error("Transaction error:", error);
+      const errorMessage =
+        error.shortMessage || error.message || "An unknown error occurred.";
+      if (
+        errorMessage.includes("insufficient funds") ||
+        errorMessage.includes("gas required exceeds allowance")
+      ) {
+        toast.error(
+          "Insufficient balance for total amount or gas fees. Please check your balance.",
+          { id: toastId, duration: 8000 }
+        );
       } else if (errorMessage.includes("user rejected transaction")) {
         toast.error("Transaction rejected by user.", { id: toastId });
-      } 
-      else {
+      } else {
         toast.error(`Transaction failed: ${errorMessage}`, { id: toastId });
       }
     } finally {
@@ -272,21 +357,39 @@ export default function SendPage() {
           {/* Mode Selector (Single/Multi Send) */}
           <div className="flex justify-center mb-6 border-2 border-black">
             <button
-              onClick={() => { setSendMode('single'); setAmount(''); setRecipient(''); setMultiRecipientsList(''); }} 
-              className={`flex-1 p-3 font-pixel ${sendMode === 'single' ? 'bg-orange-400 text-stone-900' : 'bg-stone-700 text-white hover:bg-stone-600'}`}
+              onClick={() => {
+                setSendMode("single");
+                setAmount("");
+                setRecipient("");
+                setMultiRecipientsList("");
+              }}
+              className={`flex-1 p-3 font-pixel ${
+                sendMode === "single"
+                  ? "bg-orange-400 text-stone-900"
+                  : "bg-stone-700 text-white hover:bg-stone-600"
+              }`}
             >
               Single Send
             </button>
             <button
-              onClick={() => { setSendMode('multi'); setAmount(''); setRecipient(''); setMultiRecipientsList(''); }} 
-              className={`flex-1 p-3 font-pixel ${sendMode === 'multi' ? 'bg-orange-400 text-stone-900' : 'bg-stone-700 text-white hover:bg-stone-600'}`}
+              onClick={() => {
+                setSendMode("multi");
+                setAmount("");
+                setRecipient("");
+                setMultiRecipientsList("");
+              }}
+              className={`flex-1 p-3 font-pixel ${
+                sendMode === "multi"
+                  ? "bg-orange-400 text-stone-900"
+                  : "bg-stone-700 text-white hover:bg-stone-600"
+              }`}
             >
               Multi Send
             </button>
           </div>
 
           <form onSubmit={handleSend} className="space-y-6">
-            {sendMode === 'single' ? (
+            {sendMode === "single" ? (
               // Single Send Form
               <>
                 <div>
@@ -356,7 +459,7 @@ export default function SendPage() {
                     value={multiRecipientsList}
                     onChange={(e) => setMultiRecipientsList(e.target.value)}
                     placeholder={`0xabc...123, 0xdef...456, 0xghi...789`}
-                    rows={4} 
+                    rows={4}
                     className="w-full p-3 bg-stone-800 border-2 border-black text-white font-mono focus:outline-none focus:border-orange-400"
                     required
                   ></textarea>
@@ -365,58 +468,75 @@ export default function SendPage() {
                   </p>
                 </div>
 
-                {/* Amount Type Selector for Multi Send */}
-                <div className="flex justify-center mb-3 border-2 border-black">
-                    <button
-                        type="button"
-                        onClick={() => setMultiSendAmountType('per_recipient')}
-                        className={`flex-1 p-3 font-pixel text-sm
-                            ${multiSendAmountType === 'per_recipient' ? 'bg-orange-400 text-stone-900' : 'bg-stone-700 text-white hover:bg-stone-600'}`}
-                    >
-                        Amount Per Recipient
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setMultiSendAmountType('total_distributed')}
-                        className={`flex-1 p-3 font-pixel text-sm
-                            ${multiSendAmountType === 'total_distributed' ? 'bg-orange-400 text-stone-900' : 'bg-stone-700 text-white hover:bg-stone-600'}`}
-                    >
-                        Total Amount (Distribute)
-                    </button>
-                </div>
-
-                <div>
-                    <label className="block text-sm mb-2 font-bold">
-                        Amount (STT)
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                        {presetAmounts.map((val) => (
-                        <button
-                            type="button"
-                            key={val}
-                            onClick={() => setAmount(val)}
-                            className={`
-                            p-2 font-pixel text-sm border-2 transition-colors duration-200
+                {/* Amount Type Selector for Multi Send - SANGAT DIPERBAIKI */}
+                {/* Kontainer sekarang akan mengatur penumpukan dan jarak */}
+                <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setMultiSendAmountType("per_recipient")}
+                    className={`
+                            w-full p-3 font-pixel text-sm border-2 transition-colors duration-200
                             ${
-                                amount === val
+                              multiSendAmountType === "per_recipient"
                                 ? "bg-orange-400 text-stone-900 border-orange-600"
                                 : "bg-stone-800 text-orange-400 border-stone-700 hover:bg-stone-700 hover:border-orange-500"
                             }
-                            `}
-                        >
-                            {val}
-                        </button>
-                        ))}
-                    </div>
-                    <input
-                        id="multiAmount"
-                        type="text"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder={multiSendAmountType === 'per_recipient' ? "Enter amount per recipient" : "Enter total amount to distribute"}
-                        className="w-full p-3 bg-stone-800 border-2 border-black text-white font-mono focus:outline-none focus:border-orange-400"
-                        required
-                    />
+                        `}
+                  >
+                    Amount Per Recipient
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMultiSendAmountType("total_distributed")}
+                    className={`
+                            w-full p-3 font-pixel text-sm border-2 transition-colors duration-200
+                            ${
+                              multiSendAmountType === "total_distributed"
+                                ? "bg-orange-400 text-stone-900 border-orange-600"
+                                : "bg-stone-800 text-orange-400 border-stone-700 hover:bg-stone-700 hover:border-orange-500"
+                            }
+                        `}
+                  >
+                    Total Amount (Distribute)
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2 font-bold">
+                    Amount (STT)
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                    {presetAmounts.map((val) => (
+                      <button
+                        type="button"
+                        key={val}
+                        onClick={() => setAmount(val)}
+                        className={`
+                          p-2 font-pixel text-sm border-2 transition-colors duration-200
+                          ${
+                            amount === val
+                              ? "bg-orange-400 text-stone-900 border-orange-600"
+                              : "bg-stone-800 text-orange-400 border-stone-700 hover:bg-stone-700 hover:border-orange-500"
+                          }
+                        `}
+                      >
+                        {val}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    id="multiAmount"
+                    type="text"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder={
+                      multiSendAmountType === "per_recipient"
+                        ? "Enter amount per recipient"
+                        : "Enter total amount to distribute"
+                    }
+                    className="w-full p-3 bg-stone-800 border-2 border-black text-white font-mono focus:outline-none focus:border-orange-400"
+                    required
+                  />
                 </div>
               </>
             )}
@@ -432,7 +552,11 @@ export default function SendPage() {
                 }
               `}
             >
-              {isLoading ? "Sending..." : sendMode === 'single' ? "Send Tokens" : "Send Multiple Tokens"}
+              {isLoading
+                ? "Sending..."
+                : sendMode === "single"
+                ? "Send Tokens"
+                : "Send Multiple Tokens"}
             </PixelatedButton>
           </form>
         </PixelatedCard>

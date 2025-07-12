@@ -201,13 +201,6 @@ export default function AdminPage() {
             <PixelatedCard className="text-center">
                 <h2 className="text-2xl text-red-500">Access Denied</h2>
                 <p className="mt-4">You are not authorized to access this page.</p>
-                <p className="mt-2 text-sm text-brand-gray">Connected as: {address || 'N/A'}</p> 
-                {(multisenderOwner && typeof multisenderOwner === 'string') ? (
-                    <p className="mt-2 text-xs text-stone-500">Multisender Owner: {multisenderOwner}</p>
-                ) : null}
-                {MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" && (
-                    <p className="mt-2 text-xs text-red-400 text-center">Multisender contract address is not configured. Please set NEXT_PUBLIC_MULTISENDER_CONTRACT_ADDRESS in .env.local</p>
-                )}
             </PixelatedCard>
         );
     }
