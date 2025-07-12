@@ -1,10 +1,7 @@
-// pages/api/leaderboard/route.ts atau app/api/leaderboard/route.ts
-// (Tergantung struktur Next.js Anda, untuk Next.js 13+ App Router)
-
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { parseEther } from 'ethers';
-import { Decimal128 } from 'mongodb'; // Penting: Import Decimal128
+import { Decimal128 } from 'mongodb';
 
 interface PostBody {
     senderAddress: string;
@@ -22,13 +19,11 @@ export async function GET() {
             .sort({ totalSentWei: -1 })
             .limit(20)
             .toArray();
-
-        // Pastikan totalSentWei dikonversi ke string sebelum dikirim ke frontend
         const sanitizedLeaderboard = leaderboard.map(item => ({
-            _id: item._id.toString(), // _id dari MongoDB adalah ObjectId, perlu di-string-kan
+            _id: item._id.toString(),
             walletAddress: item.walletAddress,
             txCount: item.txCount,
-            totalSentWei: item.totalSentWei ? item.totalSentWei.toString() : "0", // Konversi Decimal128 ke string
+            totalSentWei: item.totalSentWei ? item.totalSentWei.toString() : "0",
         }));
 
         return NextResponse.json(sanitizedLeaderboard, { status: 200 });
@@ -49,40 +44,25 @@ export async function POST(request: Request) {
         const client = await clientPromise;
         const db = client.db("somcet");
         const collection = db.collection("transactions");
-
-        // 1. Konversi amountSent (string Ether) ke Wei (BigInt)
-        // Ini memastikan jumlah yang dikirim adalah dalam unit Wei yang tepat
         const amountWeiBigInt = parseEther(amountSent);
-
-        // 2. Cari entri leaderboard untuk alamat pengirim
         const existingEntry = await collection.findOne({ walletAddress: senderAddress.toLowerCase() });
 
         let newTotalSentWeiDecimal;
 
         if (existingEntry && existingEntry.totalSentWei) {
-            // Jika entri sudah ada dan totalSentWei ada
-            // Asumsi existingEntry.totalSentWei adalah Decimal128 atau string lama
-            // Kita harus mengonversi ke BigInt untuk penjumlahan presisi
             const currentTotalWeiBigInt = BigInt(existingEntry.totalSentWei.toString());
             
             const summedWeiBigInt = currentTotalWeiBigInt + amountWeiBigInt;
-            
-            // Konversi kembali BigInt hasil penjumlahan ke Decimal128 sebelum menyimpan
             newTotalSentWeiDecimal = Decimal128.fromString(summedWeiBigInt.toString());
         } else {
-            // Jika entri baru atau totalSentWei belum ada (kasus pertama kali transaksi)
-            // Konversi BigInt dari amountWeiBigInt ke Decimal128 untuk penyimpanan awal
             newTotalSentWeiDecimal = Decimal128.fromString(amountWeiBigInt.toString());
         }
-
-        // 3. Update atau Insert entri
-        // Gunakan $set untuk totalSentWei yang sudah kita hitung secara presisi
         await collection.updateOne(
             { walletAddress: senderAddress.toLowerCase() },
             {
-                $inc: { txCount: 1 }, // txCount bisa tetap $inc karena ini integer biasa
-                $set: { totalSentWei: newTotalSentWeiDecimal }, // Penting: Gunakan $set dengan Decimal128
-                $setOnInsert: { walletAddress: senderAddress.toLowerCase() } // Tambahkan walletAddress saat upsert jika belum ada
+                $inc: { txCount: 1 },
+                $set: { totalSentWei: newTotalSentWeiDecimal },
+                $setOnInsert: { walletAddress: senderAddress.toLowerCase() }
             },
             { upsert: true }
         );

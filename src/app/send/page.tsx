@@ -18,6 +18,9 @@ import toast from "react-hot-toast";
 
 import PixelatedButton from "@/components/PixelatedButton";
 import PixelatedCard from "@/components/PixelatedCard";
+// --- PERBAIKAN: Import komponen DisplayUsername ---
+import DisplayUsername from "@/components/DisplayUsername";
+
 
 const SOMNIA_TESTNET_CHAIN_ID = 50312;
 import { abiMultiSender } from "@/contracts/abis";
@@ -25,7 +28,6 @@ import { abiMultiSender } from "@/contracts/abis";
 const MULTISENDER_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_MULTISENDER_CONTRACT_ADDRESS as `0x${string}`;
 
-// --- Variabel Lingkungan Baru untuk Explorer URL ---
 const EXPLORER_URL = process.env.NEXT_PUBLIC_EXPLORER_URL;
 
 interface LeaderboardEntry {
@@ -106,7 +108,6 @@ export default function SendPage() {
 
     try {
       if (sendMode === "single") {
-        // Logika untuk Single Send
         if (!isAddress(recipient)) {
           toast.error("Invalid recipient address!", { id: toastId });
           return;
@@ -116,13 +117,11 @@ export default function SendPage() {
           return;
         }
 
-        // --- Perubahan di sini untuk mendapatkan Tx Hash ---
         const hash = await sendTransactionAsync({
           to: recipient as `0x${string}`,
           value: parseEther(amount),
         });
 
-        // Tampilkan Tx Hash di notifikasi sukses
         toast.success(
           (t) => (
             <div>
@@ -255,7 +254,6 @@ export default function SendPage() {
           signer
         );
 
-        // --- Perubahan di sini untuk mendapatkan Tx Hash dari multi-send ---
         const txResponse = await multiSenderContract.multiSendNative(
           recipientAddresses,
           amountsForContract,
@@ -268,7 +266,6 @@ export default function SendPage() {
         });
         const receipt = await txResponse.wait(); // Tunggu hingga transaksi dikonfirmasi dan dapatkan receipt
 
-        // Tampilkan Tx Hash di notifikasi sukses untuk multi-send
         toast.success(
           (t) => (
             <div>
@@ -577,7 +574,9 @@ export default function SendPage() {
                   className="grid grid-cols-3 items-center text-center p-2 transition-colors hover:bg-stone-800 rounded-md"
                 >
                   <span className="font-mono text-left">
-                    {index + 1}. {maskAddress(entry.walletAddress)}
+                    {index + 1}. {" "} 
+                    {/* --- PERBAIKAN: Menggunakan DisplayUsername di sini --- */}
+                    <DisplayUsername address={entry.walletAddress as `0x${string}`} />
                   </span>
                   <span className="font-pixel">{entry.txCount}</span>
                   <span className="font-pixel text-yellow-400">

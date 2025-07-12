@@ -1,9 +1,6 @@
-// pages/api/stream.ts atau app/api/stream/route.ts
-// (Tergantung struktur Next.js Anda)
-
 import clientPromise from '@/lib/mongodb';
 import { ChangeStream } from 'mongodb';
-export const dynamic = 'force-dynamic'; // Penting untuk Server-Sent Events di Next.js
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
     const client = await clientPromise;
@@ -13,7 +10,7 @@ export async function GET(request: Request) {
     let changeStream: ChangeStream;
 
     const stream = new ReadableStream({
-        async start(controller) { // Pastikan start adalah async
+        async start(controller) {
             changeStream = collection.watch();
 
             changeStream.on('change', async () => {
@@ -24,20 +21,16 @@ export async function GET(request: Request) {
                     .sort({ totalSentWei: -1 })
                     .limit(20)
                     .toArray();
-
-                // Pastikan totalSentWei dikonversi ke string sebelum dikirim melalui stream
                 const sanitizedLeaderboard = updatedLeaderboard.map(item => ({
-                    _id: item._id.toString(), // _id dari MongoDB adalah ObjectId, perlu di-string-kan
+                    _id: item._id.toString(),
                     walletAddress: item.walletAddress,
                     txCount: item.txCount,
-                    totalSentWei: item.totalSentWei ? item.totalSentWei.toString() : "0", // Konversi Decimal128 ke string
+                    totalSentWei: item.totalSentWei ? item.totalSentWei.toString() : "0",
                 }));
                 
                 try {
-                    // Kirim data sebagai Server-Sent Event
                     controller.enqueue(`data: ${JSON.stringify(sanitizedLeaderboard)}\n\n`);
                 } catch (error) {
-                    // Ini bisa terjadi jika klien menutup koneksi SSE
                     console.log("Could not enqueue data, stream likely closed by client.", error);
                 }
             });
@@ -49,7 +42,6 @@ export async function GET(request: Request) {
                 controller.close();
             };
         },
-        // opsional: cancel(reason) { ... } jika ada logika pembersihan tambahan
     });
 
     return new Response(stream, {

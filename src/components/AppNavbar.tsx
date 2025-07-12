@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-
+import DisplayUsername from "./DisplayUsername";
 import PixelatedButton from './PixelatedButton';
 
 const AppNavbar = () => {
@@ -46,7 +46,7 @@ const AppNavbar = () => {
                 <div className="flex items-center gap-2 sm:gap-3">
                   <button
                     onClick={openChainModal}
-                    className="hidden sm:flex items-center gap-2 bg-stone-800 hover:bg-stone-700 text-white font-pixel py-2 px-4 border-2 border-black shadow-pixel transition-all"
+                    className="hidden sm:flex items-center gap-2 bg-stone-800 hover:bg-stone-700 text-brand-orange font-pixel py-2 px-4 border-2 border-black shadow-pixel transition-all"
                     type="button"
                   >
                     {chain.hasIcon && (
@@ -63,7 +63,11 @@ const AppNavbar = () => {
                     type="button"
                     className="bg-stone-800 hover:bg-stone-700 text-brand-orange font-pixel py-2 px-4 border-2 border-black shadow-pixel transition-all"
                   >
-                    {account.displayName}
+                          {account.displayName && (
+                            <DisplayUsername
+                              address={account.address as `0x${string}`}
+                            />
+                          )}
                   </button>
                 </div>
               );

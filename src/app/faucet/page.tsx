@@ -7,8 +7,7 @@ import toast from 'react-hot-toast';
 
 import PixelatedButton from '@/components/PixelatedButton';
 import PixelatedCard from '@/components/PixelatedCard';
-import FaucetContract from '@/contracts/Faucet.json';
-
+import { abiFaucet } from '@/contracts/abis';
 const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_FAUCET_CONTRACT_ADDRESS as `0x${string}`;
 const SOMNIA_TESTNET_CHAIN_ID = 50312;
 
@@ -21,13 +20,13 @@ export default function FaucetPage() {
     const { data: balance, refetch: refetchBalance } = useBalance({ address: FAUCET_ADDRESS });
     
     const { data: claimAmount, refetch: refetchClaimAmount } = useReadContract({
-        abi: FaucetContract.abi,
+        abi: abiFaucet,
         address: FAUCET_ADDRESS,
         functionName: 'claimAmount',
     });
     
     const { data: remainingCooldown, refetch: refetchCooldown } = useReadContract({
-        abi: FaucetContract.abi,
+        abi: abiFaucet,
         address: FAUCET_ADDRESS,
         functionName: 'getRemainingCooldown',
         args: [address],
@@ -35,7 +34,7 @@ export default function FaucetPage() {
     });
 
     const { data: cooldownTime } = useReadContract({
-        abi: FaucetContract.abi,
+        abi: abiFaucet,
         address: FAUCET_ADDRESS,
         functionName: 'cooldownTime',
     });
@@ -63,7 +62,6 @@ export default function FaucetPage() {
         if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
         if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
         if (seconds > 0 && hours === 0) parts.push(`${seconds} second${seconds > 1 ? 's' : ''}`); 
-        // Tampilkan detik hanya kalau gak ada jam (biar ringkas)
 
         return `every ${parts.join(' ')}`;
     };
@@ -97,7 +95,7 @@ export default function FaucetPage() {
         const toastId = toast.loading('Processing your claim...');
         try {
             await writeContractAsync({
-                abi: FaucetContract.abi,
+                abi: abiFaucet,
                 address: FAUCET_ADDRESS,
                 functionName: 'claim',
             });
