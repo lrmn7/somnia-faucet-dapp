@@ -4,6 +4,7 @@ import "@/styles/globals.css";
 import dynamic from "next/dynamic";
 import AppNavbar from "@/components/AppNavbar";
 import AppFooter from "@/components/AppFooter";
+import AlertBanner from "@/components/AlertBanner";
 
 const inter = Inter({ subsets: ["latin"] });
 const ClientOnlyProviders = dynamic(() => import("@/app/providers-client"), { ssr: false });
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ClientOnlyProviders>
           <div className="flex flex-col min-h-screen">
+            <AlertBanner />
             <AppNavbar />
             <main className="flex-grow container mx-auto px-4 py-8">
               {children}
