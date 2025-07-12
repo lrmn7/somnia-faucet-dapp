@@ -14,6 +14,7 @@ const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_FAUCET_CONTRACT_ADDRESS as `0x${s
 
 // --- Konfigurasi untuk Kontrak Multisender ---
 const MULTISENDER_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_MULTISENDER_CONTRACT_ADDRESS as `0x${string}` || "0x0000000000000000000000000000000000000000";
+const TROLL_IMAGE_URL = "/muehehe.png";
 
 
 export default function AdminPage() {
@@ -23,7 +24,6 @@ export default function AdminPage() {
     const [depositAmount, setDepositAmount] = useState('');
     const [newClaimAmount, setNewClaimAmount] = useState('');
     const [newCooldown, setNewCooldown] = useState('');
-    // State baru untuk Multisender Withdrawal
     const [multisenderWithdrawRecipient, setMultisenderWithdrawRecipient] = useState('');
 
     // --- Data Faucet ---
@@ -54,7 +54,7 @@ export default function AdminPage() {
     // Fungsi formatDuration menerima number atau bigint atau undefined/null
     const formatDuration = (totalSeconds: number | bigint | undefined | null): string => {
         if (totalSeconds === undefined || totalSeconds === null) return 'Loading...';
-        const sec = Number(totalSeconds); // Konversi bigint ke number untuk konsistensi
+        const sec = Number(totalSeconds); 
         if (sec === 0) return "0 Seconds (Instant)";
         if (sec === 86400) return "24 Hours";
         if (sec === 43200) return "12 Hours";
@@ -103,7 +103,7 @@ export default function AdminPage() {
         const toastId = toast.loading('Withdrawing STT from Faucet...');
         try {
             await writeContractAsync({
-                abi: abiFaucet,
+                abi: abiFaucet, 
                 address: FAUCET_ADDRESS,
                 functionName: 'withdraw',
             });
@@ -123,7 +123,7 @@ export default function AdminPage() {
         const toastId = toast.loading('Updating claim amount...');
         try {
             await writeContractAsync({
-                abi: abiFaucet,
+                abi: abiFaucet, 
                 address: FAUCET_ADDRESS,
                 functionName: 'setClaimAmount',
                 args: [parseEther(newClaimAmount)],
@@ -145,7 +145,7 @@ export default function AdminPage() {
         const toastId = toast.loading('Updating cooldown time...');
         try {
             await writeContractAsync({
-                abi: abiFaucet,
+                abi: abiFaucet, 
                 address: FAUCET_ADDRESS,
                 functionName: 'setCooldownTime',
                 args: [BigInt(newCooldown)],
@@ -173,7 +173,7 @@ export default function AdminPage() {
         const toastId = toast.loading('Withdrawing STT from Multisender...');
         try {
             await writeContractAsync({
-                abi: abiMultiSender,
+                abi: abiMultiSender, 
                 address: MULTISENDER_CONTRACT_ADDRESS,
                 functionName: 'withdrawStuckFunds',
                 args: [multisenderWithdrawRecipient as `0x${string}`],
@@ -201,6 +201,13 @@ export default function AdminPage() {
             <PixelatedCard className="text-center">
                 <h2 className="text-2xl text-red-500">Access Denied</h2>
                 <p className="mt-4">You are not authorized to access this page.</p>
+                <div className="mt-6 flex justify-center">
+                    <img 
+                        src={TROLL_IMAGE_URL} 
+                        alt="Access Denied Troll" 
+                        className="max-w-xs md:max-w-sm rounded-lg shadow-lg" 
+                    />
+                </div>
             </PixelatedCard>
         );
     }
@@ -256,7 +263,7 @@ export default function AdminPage() {
                         value={newCooldown}
                         onChange={(e) => setNewCooldown(e.target.value)}
                         placeholder="New cooldown in seconds (e.g., 43200 for 12h)"
-                        className="flex-grow bg-stone-900 text-white p-3 border-2 border-black focus:outline-none focus:border-orange-400"
+                        className="flex-grow bg-stone-900 text-white p-3 border-2 border-black focus:outline-none focus:border-brand-orange"
                     />
                     <PixelatedButton onClick={handleSetCooldown}>Set Cooldown</PixelatedButton>
                 </div>
@@ -295,29 +302,25 @@ export default function AdminPage() {
                         {multisenderBalance ? `${formatEther(multisenderBalance.value)} ${multisenderBalance.symbol}` : 'Loading...'}
                     </span>
                 </p>
+                {/* Menghilangkan tampilan Contract Address dan Contract Owner, sesuai permintaan */}
+            </PixelatedCard>
 
+            <PixelatedCard>
                 <h2 className="text-2xl mb-4">Withdraw Stuck Multisender Funds</h2>
                 <p className="mb-4">
-                    This function allows the contract owner to withdraw any STT that got stuck in the Multisender contract (e.g., from overpayments or accidental direct transfers).
+                    This function allows the contract owner to withdraw any STT that got stuck in the Multisender contract directly to their connected wallet.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                    <input
-                        type="text"
-                        value={multisenderWithdrawRecipient}
-                        onChange={(e) => setMultisenderWithdrawRecipient(e.target.value)}
-                        placeholder="Recipient address for withdrawal (0x...)"
-                        className="flex-grow bg-stone-900 text-white p-3 border-2 border-black focus:outline-none focus:border-orange-400"
-                    />
                     <PixelatedButton 
                         onClick={handleWithdrawStuckFunds} 
                         disabled={
                             !multisenderBalance || 
                             multisenderBalance.value === BigInt(0) || 
-                            !multisenderWithdrawRecipient || 
-                            !isAddress(multisenderWithdrawRecipient) 
+                            MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" 
                         }
+                        className="w-full" 
                     >
-                        Withdraw All STT (Multisender)
+                        Withdraw All STT (Multisender) to Owner
                     </PixelatedButton>
                 </div>
                 {MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" && (

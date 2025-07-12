@@ -87,7 +87,7 @@ const AppFooter = () => {
         <div className="border-b border-stone-700 my-8"></div>
         <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-6">
           <div className="text-sm text-center sm:text-left">
-            <p>“Knowledge is power, play and learn!”</p>
+            <p>✦ born from silence, built with purpose ✦</p>
             <p className="mt-1">Built with 💛 by Somnia Community</p>
           </div>
 

@@ -1,24 +1,22 @@
-import Link from "next/link";
-
 const FaqSection = () => {
   const faqs = [
     {
       q: "How does the Faucet work?",
-      a: "The faucet provides 0.5 STT testnet tokens for free. You can claim them once every 12 hours to use for transaction fees on the Somnia Testnet.",
+      a: "The faucet provides 0.5 STT testnet tokens for free. You can claim them once every 24 hours to use for transaction fees on the Somnia Testnet.",
     },
     {
       q: "What is the 'Send' page and Leaderboard for?",
-      a: "The 'Send' page allows you to transfer STT testnet tokens to other users. Every transaction you send is recorded. The Leaderboard displays the top 20 users based on the total tokens they have sent, as a fun way to encourage activity on the testnet.",
+      a: "The 'Send' page allows you to transfer STT testnet tokens to other users. You can choose to send tokens to a single recipient or use the Multi Send feature to send to multiple addresses at once. Every transaction you send is recorded, and the Leaderboard displays the top 20 users based on their total sent tokens, encouraging activity on the testnet.",
     },
     {
       q: "Is this dApp safe to use?",
       a: (
         <>
           Absolutely. This dApp is completely safe and never asks for access to
-          your private keys. The entire source code is open-source, and
-          you can verify it yourself directly on our{" "}
+          your private keys. The entire source code is open-source, and you can
+          verify it yourself directly on our{" "}
           <a
-            href="https://github.com/lrmn7"
+            href="https://github.com/lrmn7/somnia-faucet-dapp"
             target="_blank"
             rel="noopener noreferrer"
             className="text-brand-orange hover:underline font-semibold"
