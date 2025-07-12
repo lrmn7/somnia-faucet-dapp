@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useSendTransaction, useBalance } from "wagmi";
-import { parseEther, formatEther, isAddress } from "ethers";
+import { useAccount, useSendTransaction, useBalance, useWalletClient } from "wagmi";
+import { parseEther, formatEther, isAddress, Contract, BrowserProvider } from "ethers";
 import toast from "react-hot-toast";
 
 import PixelatedButton from "@/components/PixelatedButton";
 import PixelatedCard from "@/components/PixelatedCard";
 
 const SOMNIA_TESTNET_CHAIN_ID = 50312;
+import { abiMultiSender } from '@/contracts/abis';
+const MULTISENDER_CONTRACT_ADDRESS: `0x${string}` = "0x13838069d43070140E92441dA13F0628CD160A5C"; // GANTI DENGAN ALAMAT ASLI ANDA!
 
 interface LeaderboardEntry {
   _id: string;
@@ -23,12 +25,13 @@ type MultiSendAmountType = 'per_recipient' | 'total_distributed';
 export default function SendPage() {
   const { address, isConnected, chain } = useAccount();
   const { data: balance } = useBalance({ address });
-  const { sendTransactionAsync } = useSendTransaction();
+  const { sendTransactionAsync } = useSendTransaction(); // Untuk single send
+  const { data: walletClient } = useWalletClient(); // Untuk interaksi kontrak dengan Ethers.js
 
   const [recipient, setRecipient] = useState("");
-  const [amount, setAmount] = useState(""); // Jumlah untuk single send & multi send (per_recipient)
-  const [multiRecipientsList, setMultiRecipientsList] = useState(""); // Daftar alamat untuk multi send
-  const [multiSendAmountType, setMultiSendAmountType] = useState<MultiSendAmountType>('per_recipient'); // State baru untuk tipe jumlah multi-send
+  const [amount, setAmount] = useState(""); 
+  const [multiRecipientsList, setMultiRecipientsList] = useState(""); 
+  const [multiSendAmountType, setMultiSendAmountType] = useState<MultiSendAmountType>('per_recipient'); 
   const [sendMode, setSendMode] = useState<SendMode>('single'); 
   
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -70,21 +73,21 @@ export default function SendPage() {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isConnected || !address) {
+    if (!isConnected || !address || !walletClient) { 
       toast.error("Please connect your wallet first!");
       return;
     }
     if (chain?.id !== SOMNIA_TESTNET_CHAIN_ID) {
-      toast.error("Please switch to Somnia Testnet!");
+      toast.error("Please switch to Somnia Testnet!", { duration: 5000 });
       return;
     }
 
-    const toastId = toast.loading("Processing your transaction(s)...");
+    const toastId = toast.loading("Processing your transaction(s)...", { duration: 0 }); 
     setIsLoading(true);
 
     try {
       if (sendMode === 'single') {
-        // Logika untuk Single Send
+        // Logika untuk Single Send (tidak berubah)
         if (!isAddress(recipient)) {
           toast.error("Invalid recipient address!", { id: toastId });
           return;
@@ -111,13 +114,12 @@ export default function SendPage() {
         setAmount("");
 
       } else { // sendMode === 'multi'
-        // Perubahan di sini: Memecah berdasarkan koma, lalu membersihkan setiap entri
-        const recipients = multiRecipientsList
+        const recipientAddresses = multiRecipientsList
           .split(',')
           .map(addr => addr.trim())
           .filter(addr => addr !== '');
         
-        if (recipients.length === 0) {
+        if (recipientAddresses.length === 0) {
           toast.error("No recipients entered for multi-send!", { id: toastId });
           return;
         }
@@ -128,58 +130,108 @@ export default function SendPage() {
           return;
         }
 
-        let totalAmountSent = 0; // Untuk update leaderboard
-        const transactionsToSend = [];
+        let amountsForContract: bigint[] = []; 
+        let totalAmountForContract: bigint = BigInt(0); 
 
         if (multiSendAmountType === 'per_recipient') {
-          // Jumlah yang sama untuk setiap penerima
-          for (const addr of recipients) {
+          const amountWeiPerRecipient = parseEther(amount); 
+          for (const addr of recipientAddresses) {
             if (!isAddress(addr)) {
               toast.error(`Invalid recipient address: ${addr}`, { id: toastId });
               return;
             }
-            transactionsToSend.push({ to: addr as `0x${string}`, value: parseEther(amount) });
-            totalAmountSent += parsedAmount;
+            amountsForContract.push(amountWeiPerRecipient);
+            totalAmountForContract += amountWeiPerRecipient;
           }
         } else { // total_distributed
-          // Jumlah total dibagi rata ke setiap penerima
-          const amountPerRecipient = parsedAmount / recipients.length;
-          if (amountPerRecipient <= 0) {
-              toast.error("Total amount is too small to distribute among recipients!", { id: toastId });
+          const totalAmountWei = parseEther(amount);
+          // Pastikan tidak ada pembagian dengan nol
+          if (recipientAddresses.length === 0) {
+              toast.error("Cannot distribute to zero recipients.", { id: toastId });
               return;
           }
-          for (const addr of recipients) {
+          const amountWeiPerRecipient = totalAmountWei / BigInt(recipientAddresses.length);
+          
+          if (amountWeiPerRecipient <= BigInt(0)) {
+              toast.error("Total amount is too small to distribute among recipients! Consider more amount or fewer recipients.", { id: toastId, duration: 5000 });
+              return;
+          }
+          
+          // Hitung sisa jika pembagian tidak tepat, tambahkan ke penerima pertama
+          const remainder = totalAmountWei % BigInt(recipientAddresses.length);
+
+          for (let i = 0; i < recipientAddresses.length; i++) {
+            const addr = recipientAddresses[i];
             if (!isAddress(addr)) {
               toast.error(`Invalid recipient address: ${addr}`, { id: toastId });
               return;
             }
-            transactionsToSend.push({ to: addr as `0x${string}`, value: parseEther(amountPerRecipient.toString()) });
-            totalAmountSent += amountPerRecipient;
+            let currentAmount = amountWeiPerRecipient;
+            // Tambahkan sisa ke penerima pertama untuk memastikan semua dana terdistribusi
+            if (i === 0) {
+                currentAmount += remainder;
+            }
+            amountsForContract.push(currentAmount);
+            totalAmountForContract += currentAmount;
           }
         }
-
-        // Kirim transaksi satu per satu
-        for (const tx of transactionsToSend) {
-          await sendTransactionAsync(tx);
+        
+        if (totalAmountForContract === BigInt(0)) {
+            toast.error("Calculated total amount to send is zero. Please check inputs.", { id: toastId });
+            return;
         }
 
-        toast.success(`Sent ${transactionsToSend.length} transactions successfully! Total: ${totalAmountSent} STT`, { id: toastId });
+        // Pastikan alamat kontrak Multisender sudah diatur
+        if (MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+            toast.error("MultiSender contract address is not configured. Please deploy the contract and update the code.", { id: toastId, duration: 8000 });
+            return;
+        }
 
-        // Update leaderboard dengan total jumlah yang dikirim
+        // --- Panggil kontrak Multisender ---
+        const provider = new BrowserProvider(walletClient.transport, {
+          name: walletClient.chain.name,
+          chainId: walletClient.chain.id,
+        });
+        const signer = await provider.getSigner();
+
+        const multiSenderContract = new Contract(MULTISENDER_CONTRACT_ADDRESS, abiMultiSender, signer);
+
+        // Panggil fungsi multiSendNative dari kontrak Multisender
+        const txResponse = await multiSenderContract.multiSendNative(
+          recipientAddresses, 
+          amountsForContract, 
+          { value: totalAmountForContract } 
+        );
+
+        toast.loading("Waiting for multi-send transaction confirmation...", { id: toastId, duration: 0 });
+        await txResponse.wait(); // Tunggu hingga transaksi dikonfirmasi
+
+        toast.success(`Multi-send successful! Sent to ${recipientAddresses.length} recipients.`, { id: toastId });
+
         await fetch("/api/leaderboard", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ senderAddress: address, amountSent: totalAmountSent.toString() }),
+          body: JSON.stringify({ 
+            senderAddress: address, 
+            amountSent: formatEther(totalAmountForContract) // Ubah BigInt Wei ke string Ether
+          }),
         });
 
         setMultiRecipientsList("");
-        setAmount(""); // Reset jumlah
+        setAmount(""); 
       }
 
     } catch (error: any) {
-      console.error(error);
-      const errorMessage = error.shortMessage || "Transaction failed.";
-      toast.error(errorMessage, { id: toastId });
+      console.error('Transaction error:', error); 
+      const errorMessage = error.shortMessage || error.message || 'An unknown error occurred.';
+      if (errorMessage.includes("insufficient funds") || errorMessage.includes("gas required exceeds allowance")) {
+        toast.error("Insufficient balance for total amount or gas fees. Please check your balance.", { id: toastId, duration: 8000 });
+      } else if (errorMessage.includes("user rejected transaction")) {
+        toast.error("Transaction rejected by user.", { id: toastId });
+      } 
+      else {
+        toast.error(`Transaction failed: ${errorMessage}`, { id: toastId });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -220,13 +272,13 @@ export default function SendPage() {
           {/* Mode Selector (Single/Multi Send) */}
           <div className="flex justify-center mb-6 border-2 border-black">
             <button
-              onClick={() => { setSendMode('single'); setAmount(''); setRecipient(''); setMultiRecipientsList(''); }} // Reset form saat ganti mode
+              onClick={() => { setSendMode('single'); setAmount(''); setRecipient(''); setMultiRecipientsList(''); }} 
               className={`flex-1 p-3 font-pixel ${sendMode === 'single' ? 'bg-orange-400 text-stone-900' : 'bg-stone-700 text-white hover:bg-stone-600'}`}
             >
               Single Send
             </button>
             <button
-              onClick={() => { setSendMode('multi'); setAmount(''); setRecipient(''); setMultiRecipientsList(''); }} // Reset form saat ganti mode
+              onClick={() => { setSendMode('multi'); setAmount(''); setRecipient(''); setMultiRecipientsList(''); }} 
               className={`flex-1 p-3 font-pixel ${sendMode === 'multi' ? 'bg-orange-400 text-stone-900' : 'bg-stone-700 text-white hover:bg-stone-600'}`}
             >
               Multi Send
@@ -304,7 +356,7 @@ export default function SendPage() {
                     value={multiRecipientsList}
                     onChange={(e) => setMultiRecipientsList(e.target.value)}
                     placeholder={`0xabc...123, 0xdef...456, 0xghi...789`}
-                    rows={4} // Kurangi baris karena satu baris sudah cukup
+                    rows={4} 
                     className="w-full p-3 bg-stone-800 border-2 border-black text-white font-mono focus:outline-none focus:border-orange-400"
                     required
                   ></textarea>
