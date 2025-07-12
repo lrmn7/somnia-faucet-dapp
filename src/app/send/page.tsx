@@ -10,7 +10,8 @@ import PixelatedCard from "@/components/PixelatedCard";
 
 const SOMNIA_TESTNET_CHAIN_ID = 50312;
 import { abiMultiSender } from '@/contracts/abis';
-const MULTISENDER_CONTRACT_ADDRESS: `0x${string}` = "0x13838069d43070140E92441dA13F0628CD160A5C"; // GANTI DENGAN ALAMAT ASLI ANDA!
+
+const MULTISENDER_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_MULTISENDER_CONTRACT_ADDRESS as `0x${string}` || "0x0000000000000000000000000000000000000000";
 
 interface LeaderboardEntry {
   _id: string;
@@ -113,7 +114,7 @@ export default function SendPage() {
         setRecipient("");
         setAmount("");
 
-      } else { // sendMode === 'multi'
+      } else {
         const recipientAddresses = multiRecipientsList
           .split(',')
           .map(addr => addr.trim())
@@ -143,7 +144,7 @@ export default function SendPage() {
             amountsForContract.push(amountWeiPerRecipient);
             totalAmountForContract += amountWeiPerRecipient;
           }
-        } else { // total_distributed
+        } else {
           const totalAmountWei = parseEther(amount);
           // Pastikan tidak ada pembagian dengan nol
           if (recipientAddresses.length === 0) {
@@ -181,7 +182,6 @@ export default function SendPage() {
             return;
         }
 
-        // Pastikan alamat kontrak Multisender sudah diatur
         if (MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
             toast.error("MultiSender contract address is not configured. Please deploy the contract and update the code.", { id: toastId, duration: 8000 });
             return;
@@ -213,7 +213,7 @@ export default function SendPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             senderAddress: address, 
-            amountSent: formatEther(totalAmountForContract) // Ubah BigInt Wei ke string Ether
+            amountSent: formatEther(totalAmountForContract)
           }),
         });
 
