@@ -7,15 +7,13 @@ import { parseEther, formatEther, isAddress } from 'ethers'; // Import isAddress
 
 import PixelatedButton from '@/components/PixelatedButton';
 import PixelatedCard from '@/components/PixelatedCard';
-// Perbaikan: ABI Faucet diimpor dari '@/contracts/abis'
 import { abiFaucet, abiMultiSender } from '@/contracts/abis'; // Import abiMultiSender
 
 const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET?.toLowerCase();
 const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_FAUCET_CONTRACT_ADDRESS as `0x${string}`;
 
 // --- Konfigurasi untuk Kontrak Multisender ---
-// Pastikan ini sesuai dengan alamat kontrak Multisender Anda yang sudah di-deploy
-const MULTISENDER_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_MULTISENDER_CONTRACT_ADDRESS as `0x${string}` || "0x0000000000000000000000000000000000000000"; // GANTI DENGAN ALAMAT ASLI ANDA!
+const MULTISENDER_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_MULTISENDER_CONTRACT_ADDRESS as `0x${string}` || "0x0000000000000000000000000000000000000000";
 
 
 export default function AdminPage() {
@@ -25,20 +23,20 @@ export default function AdminPage() {
     const [depositAmount, setDepositAmount] = useState('');
     const [newClaimAmount, setNewClaimAmount] = useState('');
     const [newCooldown, setNewCooldown] = useState('');
-    // State baru untuk Multisender Withdrawal
-    const [multisenderWithdrawRecipient, setMultisenderWithdrawRecipient] = useState('');
+    // multisenderWithdrawRecipient tidak lagi diperlukan jika WD langsung ke owner
+    // const [multisenderWithdrawRecipient, setMultisenderWithdrawRecipient] = useState('');
 
     // --- Data Faucet ---
     const { data: faucetBalance, refetch: refetchFaucetBalance } = useBalance({ address: FAUCET_ADDRESS });
 
     const { data: currentClaimAmount, refetch: refetchClaimAmount } = useReadContract({
-        abi: abiFaucet, // Menggunakan abiFaucet dari import
+        abi: abiFaucet, 
         address: FAUCET_ADDRESS,
         functionName: 'claimAmount',
     });
 
     const { data: currentCooldown, refetch: refetchCooldown } = useReadContract({
-        abi: abiFaucet, // Menggunakan abiFaucet dari import
+        abi: abiFaucet, 
         address: FAUCET_ADDRESS,
         functionName: 'cooldownTime',
     });
@@ -46,9 +44,9 @@ export default function AdminPage() {
     // --- Data Multisender ---
     const { data: multisenderBalance, refetch: refetchMultisenderBalance } = useBalance({ address: MULTISENDER_CONTRACT_ADDRESS });
     
-    // Membaca pemilik kontrak Multisender (jika menggunakan Ownable)
+    // Membaca pemilik kontrak Multisender (tetap diperlukan untuk validasi isOwner)
     const { data: multisenderOwner, refetch: refetchMultisenderOwner } = useReadContract({
-        abi: abiMultiSender, // Menggunakan abiMultiSender dari import
+        abi: abiMultiSender, 
         address: MULTISENDER_CONTRACT_ADDRESS,
         functionName: 'owner',
     });
@@ -56,7 +54,7 @@ export default function AdminPage() {
     // Fungsi formatDuration menerima number atau bigint atau undefined/null
     const formatDuration = (totalSeconds: number | bigint | undefined | null): string => {
         if (totalSeconds === undefined || totalSeconds === null) return 'Loading...';
-        const sec = Number(totalSeconds); // Konversi bigint ke number untuk konsistensi
+        const sec = Number(totalSeconds); 
         if (sec === 0) return "0 Seconds (Instant)";
         if (sec === 86400) return "24 Hours";
         if (sec === 43200) return "12 Hours";
@@ -72,11 +70,11 @@ export default function AdminPage() {
     const isOwner = isConnected && 
                     address?.toLowerCase() === ADMIN_WALLET && 
                     (address?.toLowerCase() === (multisenderOwner as string | undefined)?.toLowerCase() || 
-                    multisenderOwner === undefined || 
-                    multisenderOwner === null || 
-                    MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000"); 
+                    multisenderOwner === undefined || // Mengizinkan akses jika owner belum terbaca
+                    multisenderOwner === null || // Mengizinkan akses jika owner null
+                    MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000"); // Mengizinkan akses jika alamat multisender belum disetel
 
-    // --- Handlers untuk Faucet ---
+    // --- Handlers untuk Faucet (Tidak Berubah) ---
     const handleDeposit = async () => {
         if (!depositAmount || parseFloat(depositAmount) <= 0) {
             toast.error('Please enter a valid amount.');
@@ -105,7 +103,7 @@ export default function AdminPage() {
         const toastId = toast.loading('Withdrawing STT from Faucet...');
         try {
             await writeContractAsync({
-                abi: abiFaucet, // Menggunakan abiFaucet dari import
+                abi: abiFaucet, 
                 address: FAUCET_ADDRESS,
                 functionName: 'withdraw',
             });
@@ -125,7 +123,7 @@ export default function AdminPage() {
         const toastId = toast.loading('Updating claim amount...');
         try {
             await writeContractAsync({
-                abi: abiFaucet, // Menggunakan abiFaucet dari import
+                abi: abiFaucet, 
                 address: FAUCET_ADDRESS,
                 functionName: 'setClaimAmount',
                 args: [parseEther(newClaimAmount)],
@@ -147,7 +145,7 @@ export default function AdminPage() {
         const toastId = toast.loading('Updating cooldown time...');
         try {
             await writeContractAsync({
-                abi: abiFaucet, // Menggunakan abiFaucet dari import
+                abi: abiFaucet, 
                 address: FAUCET_ADDRESS,
                 functionName: 'setCooldownTime',
                 args: [BigInt(newCooldown)],
@@ -161,27 +159,23 @@ export default function AdminPage() {
         }
     };
 
-    // --- Handler untuk Multisender Withdrawal ---
+    // --- Handler untuk Multisender Withdrawal (Ditarik Otomatis ke Owner) ---
     const handleWithdrawStuckFunds = async () => {
         if (!multisenderBalance || multisenderBalance.value === BigInt(0)) {
             toast.error('Multisender contract has no balance to withdraw.');
             return;
         }
-        if (!multisenderWithdrawRecipient || !isAddress(multisenderWithdrawRecipient)) { 
-            toast.error('Please enter a valid recipient address for withdrawal.', { duration: 5000 });
-            return;
-        }
+        // Tidak perlu input recipient, karena akan ditarik ke owner (address yang terhubung)
 
         const toastId = toast.loading('Withdrawing STT from Multisender...');
         try {
             await writeContractAsync({
-                abi: abiMultiSender, // Perbaikan: Menggunakan abiMultiSender dari import
+                abi: abiMultiSender, 
                 address: MULTISENDER_CONTRACT_ADDRESS,
                 functionName: 'withdrawStuckFunds',
-                args: [multisenderWithdrawRecipient as `0x${string}`],
+                args: [address as `0x${string}`], // Mengirim address yang terhubung sebagai _to
             });
             toast.success('Multisender withdrawal successful!', { id: toastId });
-            setMultisenderWithdrawRecipient('');
             refetchMultisenderBalance(); 
         } catch (error: any) {
             console.error(error);
@@ -304,6 +298,8 @@ export default function AdminPage() {
                         {multisenderBalance ? `${formatEther(multisenderBalance.value)} ${multisenderBalance.symbol}` : 'Loading...'}
                     </span>
                 </p>
+                {/* Perbaikan: Menghilangkan tampilan Contract Address dan Contract Owner */}
+                {/*
                 <p className="text-lg mt-2">
                     Contract Address:{' '}
                     <span className="font-pixel text-white ml-2">
@@ -316,14 +312,17 @@ export default function AdminPage() {
                         {(multisenderOwner && typeof multisenderOwner === 'string') ? multisenderOwner : 'Loading...'}
                     </span>
                 </p>
+                */}
             </PixelatedCard>
 
             <PixelatedCard>
                 <h2 className="text-2xl mb-4">Withdraw Stuck Multisender Funds</h2>
                 <p className="mb-4">
-                    This function allows the contract owner to withdraw any STT/ETH that got stuck in the Multisender contract (e.g., from overpayments or accidental direct transfers).
+                    This function allows the contract owner to withdraw any STT/ETH that got stuck in the Multisender contract directly to their connected wallet.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
+                    {/* Perbaikan: Menghilangkan input recipient */}
+                    {/*
                     <input
                         type="text"
                         value={multisenderWithdrawRecipient}
@@ -331,16 +330,17 @@ export default function AdminPage() {
                         placeholder="Recipient address for withdrawal (0x...)"
                         className="flex-grow bg-stone-900 text-white p-3 border-2 border-black focus:outline-none focus:border-orange-400"
                     />
+                    */}
                     <PixelatedButton 
                         onClick={handleWithdrawStuckFunds} 
                         disabled={
                             !multisenderBalance || 
-                            multisenderBalance.value === BigInt(0) || 
-                            !multisenderWithdrawRecipient || 
-                            !isAddress(multisenderWithdrawRecipient) 
+                            multisenderBalance.value === BigInt(0) ||
+                            MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" // Disable jika belum dikonfigurasi
                         }
+                        className="w-full" // Perbaikan: Tombol melebar penuh jika input dihilangkan
                     >
-                        Withdraw All STT (Multisender)
+                        Withdraw All STT (Multisender) to Owner
                     </PixelatedButton>
                 </div>
                 {MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" && (
