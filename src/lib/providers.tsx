@@ -11,7 +11,7 @@ import { Disclaimer } from '@/constants/disclaimer';
 
 const config = getDefaultConfig({
   appName: 'Somtool',
-  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
+  projectId: process.env.WALLETCONNECT_PROJECT_ID!,
   chains: [somniaTestnet],
   ssr: false,
 });
