@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-contract Somcet {
+contract Somtool {
     address public owner;
     uint256 public claimAmount;
     uint256 public cooldownTime;
@@ -19,28 +19,28 @@ contract Somcet {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Somcet: Caller is not the owner");
+        require(msg.sender == owner, "Somtool: Caller is not the owner");
         _;
     }
 
     function claim() external {
-        require(block.timestamp >= nextClaimTime[msg.sender], "Somcet: Cooldown period has not passed yet");
-        require(address(this).balance >= claimAmount, "Somcet: Insufficient balance in the Somcet");
+        require(block.timestamp >= nextClaimTime[msg.sender], "Somtool: Cooldown period has not passed yet");
+        require(address(this).balance >= claimAmount, "Somtool: Insufficient balance in the Somtool");
 
         nextClaimTime[msg.sender] = block.timestamp + cooldownTime;
 
         (bool success, ) = msg.sender.call{value: claimAmount}("");
-        require(success, "Somcet: Failed to send STT");
+        require(success, "Somtool: Failed to send STT");
 
         emit Claimed(msg.sender, claimAmount);
     }
 
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
-        require(balance > 0, "Somcet: No balance to withdraw");
+        require(balance > 0, "Somtool: No balance to withdraw");
 
         (bool success, ) = owner.call{value: balance}("");
-        require(success, "Somcet: Withdrawal failed");
+        require(success, "Somtool: Withdrawal failed");
 
         emit Withdrawn(owner, balance);
     }

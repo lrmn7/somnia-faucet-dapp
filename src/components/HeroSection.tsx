@@ -21,10 +21,9 @@ const HeroSection = () => {
   return (
     <section className="text-center py-16">
       <p className="text-gray-400 text-sm mb-2">{greeting}</p>
-      <h1 className="text-5xl md:text-6xl mb-6">welcome to Somcet</h1>
+      <h1 className="text-5xl md:text-6xl mb-6">Welcome To SOMT👀L</h1>
       <p className="text-lg mb-8 max-w-3xl mx-auto">
-        need some test tokens? wanna send a tx? deploy? this lil site got u covered. no
-        fluff, just vibes 🧃
+        Dive into Somnia Testnet: Everything You Need, Made Playful.
       </p>
 
       <div className="flex justify-center gap-6">

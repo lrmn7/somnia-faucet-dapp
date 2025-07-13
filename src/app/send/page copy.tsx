@@ -16,9 +16,6 @@ import {
 } from "ethers";
 import toast from "react-hot-toast";
 
-// --- BARU: Import library xlsx ---
-import * as XLSX from 'xlsx';
-
 import PixelatedButton from "@/components/PixelatedButton";
 import PixelatedCard from "@/components/PixelatedCard";
 import DisplayUsername from "@/components/DisplayUsername";
@@ -57,8 +54,8 @@ export default function SendPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // State untuk menyimpan file XLSX yang diunggah
-  const [xlsxFile, setXlsxFile] = useState<File | null>(null);
+  // --- BARU: State untuk menyimpan file CSV yang diunggah ---
+  const [csvFile, setCsvFile] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchInitialLeaderboard = async () => {
@@ -93,66 +90,41 @@ export default function SendPage() {
     };
   }, []);
 
-  // Fungsi untuk menangani unggahan file XLSX
+  // --- BARU: Fungsi untuk menangani unggahan file CSV ---
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Hanya izinkan file XLSX
-      if (
-        file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
-        !file.name.endsWith(".xlsx")
-      ) {
-        toast.error("Please upload a valid XLSX file.");
-        setXlsxFile(null);
-        event.target.value = ""; // Reset the input file
+      if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
+        toast.error("Please upload a valid CSV file.");
+        setCsvFile(null);
+        event.target.value = ''; // Reset the input file
         return;
       }
-
-      setXlsxFile(file);
+      setCsvFile(file);
       const reader = new FileReader();
-
       reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
+        const text = e.target?.result as string;
+        // Memisahkan baris dan memfilter baris kosong, lalu menggabungkannya dengan koma
+        const addresses = text
+          .split(/[\r\n]+/) // Pisahkan berdasarkan baris baru (termasuk CRLF dan LF)
+          .map((line) => line.trim()) // Hapus spasi di awal/akhir setiap baris
+          .filter((line) => line !== "" && isAddress(line)) // Hanya masukkan alamat yang valid dan tidak kosong
+          .join(", "); // Gabungkan kembali dengan koma dan spasi
 
-          // Ambil nama sheet pertama
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-
-          // Konversi sheet ke JSON. header: 1 berarti baris pertama adalah header,
-          // data akan menjadi array of arrays.
-          const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-          // Asumsi alamat ada di kolom pertama (indeks 0)
-          const addresses = (json as any[][]) // Cast ke array 2D
-            .map(row => row[0]?.toString().trim()) // Ambil elemen pertama dari setiap baris dan trim
-            .filter(addr => addr && isAddress(addr)) // Filter alamat yang valid
-            .join(", "); // Gabungkan dengan koma dan spasi
-
-          if (addresses.length === 0) {
-            toast.error("No valid addresses found in the XLSX file or they are not in the first column.", { duration: 6000 });
-            setMultiRecipientsList("");
-          } else {
-            setMultiRecipientsList(addresses);
-            toast.success(`Successfully loaded ${json.length - (json[0]?.length > 1 ? 1 : 0)} addresses from XLSX!`);
-          }
-        } catch (error) {
-          console.error("Error reading XLSX file:", error);
-          toast.error("Failed to read XLSX file. Please ensure it's a valid Excel file and addresses are in the first column.", { duration: 8000 });
+        if (addresses.length === 0) {
+          toast.error("No valid addresses found in the CSV file.");
           setMultiRecipientsList("");
+        } else {
+          setMultiRecipientsList(addresses);
+          toast.success("Addresses loaded successfully from CSV!");
         }
       };
-
       reader.onerror = () => {
-        toast.error("Failed to read XLSX file.");
-        setMultiRecipientsList("");
+        toast.error("Failed to read CSV file.");
       };
-
-      // Baca file sebagai ArrayBuffer karena XLSX adalah format biner
-      reader.readAsArrayBuffer(file);
+      reader.readAsText(file);
     } else {
-      setXlsxFile(null);
+      setCsvFile(null);
       setMultiRecipientsList(""); // Clear recipients if no file is selected
     }
   };
@@ -364,9 +336,9 @@ export default function SendPage() {
 
         setMultiRecipientsList("");
         setAmount("");
-        // Reset input file setelah pengiriman berhasil
-        setXlsxFile(null);
-        const fileInput = document.getElementById('xlsx-upload-input') as HTMLInputElement;
+        // --- BARU: Reset input file setelah pengiriman berhasil ---
+        setCsvFile(null);
+        const fileInput = document.getElementById('csv-upload-input') as HTMLInputElement;
         if (fileInput) {
           fileInput.value = '';
         }
@@ -433,8 +405,8 @@ export default function SendPage() {
                 setAmount("");
                 setRecipient("");
                 setMultiRecipientsList("");
-                setXlsxFile(null); // Clear XLSX file selection
-                const fileInput = document.getElementById('xlsx-upload-input') as HTMLInputElement;
+                setCsvFile(null); // Clear CSV file selection
+                const fileInput = document.getElementById('csv-upload-input') as HTMLInputElement;
                 if (fileInput) {
                   fileInput.value = '';
                 }
@@ -453,8 +425,8 @@ export default function SendPage() {
                 setAmount("");
                 setRecipient("");
                 setMultiRecipientsList("");
-                setXlsxFile(null); // Clear XLSX file selection
-                const fileInput = document.getElementById('xlsx-upload-input') as HTMLInputElement;
+                setCsvFile(null); // Clear CSV file selection
+                const fileInput = document.getElementById('csv-upload-input') as HTMLInputElement;
                 if (fileInput) {
                   fileInput.value = '';
                 }
@@ -528,18 +500,18 @@ export default function SendPage() {
             ) : (
               // Multi Send Form
               <>
-                {/* Input File XLSX */}
+                {/* --- BARU: Input File CSV --- */}
                 <div className="mb-4">
                   <label
-                    htmlFor="xlsx-upload-input"
+                    htmlFor="csv-upload-input"
                     className="block text-sm mb-1 font-bold"
                   >
-                    Upload Recipients from XLSX (first column of first sheet)
+                    Upload Recipients from CSV (one address per line)
                   </label>
                   <input
-                    id="xlsx-upload-input" // Ubah ID untuk kejelasan
+                    id="csv-upload-input"
                     type="file"
-                    accept=".xlsx" // Hanya terima file XLSX
+                    accept=".csv"
                     onChange={handleFileUpload}
                     className="w-full text-white bg-stone-800 border-2 border-black p-2 cursor-pointer
                                file:mr-4 file:py-2 file:px-4
@@ -548,9 +520,9 @@ export default function SendPage() {
                                file:bg-orange-400 file:text-stone-900
                                hover:file:bg-orange-500"
                   />
-                  {xlsxFile && (
+                  {csvFile && (
                     <p className="text-xs text-stone-400 mt-1">
-                      File selected: {xlsxFile.name}
+                      File selected: {csvFile.name}
                     </p>
                   )}
                 </div>
@@ -572,7 +544,7 @@ export default function SendPage() {
                     required
                   ></textarea>
                   <p className="text-xs text-stone-400 mt-1">
-                    Enter recipient addresses manually, or they will be populated from the uploaded XLSX file.
+                    Enter recipient addresses manually, or they will be populated from CSV.
                     Invalid addresses will be filtered out.
                   </p>
                 </div>

@@ -15,7 +15,7 @@ const config: Config = {
         'brand-dark': '#1c1917',
       },
       fontFamily: {
-        'pixel': ['"Press Start 2P"', 'cursive'],
+        'pixel': ['Lilita One', 'sans-serif'],
       },
       boxShadow: {
         'pixel': '4px 4px 0px #000',

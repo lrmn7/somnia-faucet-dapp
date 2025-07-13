@@ -10,8 +10,8 @@ const inter = Inter({ subsets: ["latin"] });
 const ClientOnlyProviders = dynamic(() => import("@/app/providers-client"), { ssr: false });
 
 export const metadata: Metadata = {
-  title: "Somcet",
-  description: "need some test tokens? wanna send a tx? this lil site got u covered. no fluff, just vibes 🧃",
+  title: "Somtool",
+  description: "Dive into Somnia Testnet: Everything You Need, Made Playful.",
   icons: {
     icon: "/avatar.png",
     shortcut: "/avatar.png",
@@ -29,7 +29,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ClientOnlyProviders>
           <div className="flex flex-col min-h-screen">
-            <AlertBanner />
+           {/* <AlertBanner /> */}
             <AppNavbar />
             <main className="flex-grow container mx-auto px-4 py-8">
               {children}

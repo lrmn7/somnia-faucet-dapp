@@ -49,10 +49,10 @@ const AppFooter = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-10 mb-8">
           <div className="lg:col-span-2">
             <Link href="/" className="text-2xl font-pixel text-brand-orange mb-3 inline-block">
-              Somcet
+              SOMT👀L
             </Link>
             <p className="text-sm max-w-xs">
-              need some test tokens? wanna send a tx? this lil site got u covered. no fluff, just vibes 🧃
+              Dive into Somnia Testnet: Everything You Need, Made Playful.
             </p>
           </div>
           {footerLinks.map((column) => (

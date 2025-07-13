@@ -3,14 +3,21 @@ import Link from 'next/link';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import DisplayUsername from "./DisplayUsername";
 import PixelatedButton from './PixelatedButton';
+import Image from 'next/image';
 
+import somtool from '../../public/somtool.png';
 const AppNavbar = () => {
   return (
     <>
       <nav className="bg-brand-dark border-b-2 border-black p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <Link href="/" className="text-xl font-pixel text-brand-orange">
-            Somcet
+          <Link href="/" className="flex items-center">
+            <Image
+              src={somtool}
+              alt="Somtool Logo"
+              width={64}
+              height={64}
+            />
           </Link>
           <ConnectButton.Custom>
             {({
@@ -63,11 +70,11 @@ const AppNavbar = () => {
                     type="button"
                     className="bg-stone-800 hover:bg-stone-700 text-brand-orange font-pixel py-2 px-4 border-2 border-black shadow-pixel transition-all"
                   >
-                          {account.displayName && (
-                            <DisplayUsername
-                              address={account.address as `0x${string}`}
-                            />
-                          )}
+                              {account.displayName && (
+                                <DisplayUsername
+                                  address={account.address as `0x${string}`}
+                                />
+                              )}
                   </button>
                 </div>
               );

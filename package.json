@@ -9,8 +9,8 @@
     "lint": "next lint"
   },
   "repository": {
-  "type": "git",
-  "url": "git+https://github.com/lrmn7/somnia-faucet-dapp.git"
+    "type": "git",
+    "url": "git+https://github.com/lrmn7/somnia-faucet-dapp.git"
   },
   "author": "lrmn7",
   "license": "AGPL-3.0-or-later",
@@ -36,7 +36,8 @@
     "sass": "^1.58.3",
     "swiper": "^9.1.0",
     "viem": "2.x",
-    "wagmi": "^2.9.2"
+    "wagmi": "^2.9.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20",
