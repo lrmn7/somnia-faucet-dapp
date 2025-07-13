@@ -9,7 +9,7 @@ import PixelatedButton from '@/components/PixelatedButton';
 import PixelatedCard from '@/components/PixelatedCard';
 import { abiFaucet, abiMultiSender } from '@/contracts/abis';
 
-const ADMIN_WALLET = process.env.ADMIN_WALLET?.toLowerCase();
+const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET?.toLowerCase();
 const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_FAUCET_CONTRACT_ADDRESS as `0x${string}`;
 
 // --- Konfigurasi untuk Kontrak Multisender ---

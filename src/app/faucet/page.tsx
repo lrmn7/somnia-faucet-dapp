@@ -111,7 +111,7 @@ export default function FaucetPage() {
         }
     };
     
-    const isOwner = isConnected && address?.toLowerCase() === process.env.ADMIN_WALLET?.toLowerCase();
+    const isOwner = isConnected && address?.toLowerCase() === process.env.NEXT_PUBLIC_ADMIN_WALLET?.toLowerCase();
     const isFaucetEmpty = balance !== undefined && typeof claimAmount === 'bigint' && balance.value < claimAmount;
     
     const isButtonDisabled = isLoading || !isConnected || (cooldown > 0 && !isOwner) || isFaucetEmpty;
