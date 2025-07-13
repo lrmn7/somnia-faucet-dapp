@@ -52,7 +52,7 @@ const FaqSection = () => {
           your private keys. The entire source code is open-source, and you can
           verify it yourself directly on our{" "}
           <a
-            href="https://github.com/lrmn7/somnia-faucet-dapp"
+            href="https://github.com/lrmn7/somtool"
             target="_blank"
             rel="noopener noreferrer"
             className="text-brand-orange hover:underline font-semibold"

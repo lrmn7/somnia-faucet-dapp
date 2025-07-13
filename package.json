@@ -1,5 +1,6 @@
 {
-  "name": "somnia-faucet-dapp",
+  "name": "somtool",
+  "description": "SOMT👀L: Your Somnia Testnet Toolkit",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,12 +11,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lrmn7/somnia-faucet-dapp.git"
+    "url": "git+https://github.com/lrmn7/somtool.git"
   },
   "author": "lrmn7",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/lrmn7/somnia-faucet-dapp/issues"
+    "url": "https://github.com/lrmn7/somtool/issues"
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.4",

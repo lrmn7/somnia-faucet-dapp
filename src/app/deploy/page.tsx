@@ -40,8 +40,6 @@ export default function DeployPage() {
 
     const handleDeploy = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Trim whitespace from inputs
         const trimmedTokenName = tokenName.trim();
         const trimmedTokenSymbol = tokenSymbol.trim();
 
@@ -49,8 +47,6 @@ export default function DeployPage() {
             toast.error('Please connect your wallet first!');
             return;
         }
-
-        // Validate trimmed inputs
         if (!trimmedTokenName || !trimmedTokenSymbol) {
             toast.error('Token Name and Symbol cannot be empty.');
             return;

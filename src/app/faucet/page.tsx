@@ -51,7 +51,6 @@ export default function FaucetPage() {
         return parts.join(' ');
     };
 
-    // Perbaikan utama di sini:
     const formatDuration = (totalSeconds: number): string => {
         if (totalSeconds <= 0) return '';
         const hours = Math.floor(totalSeconds / 3600);

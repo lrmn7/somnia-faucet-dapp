@@ -16,8 +16,7 @@ import {
 } from "ethers";
 import toast from "react-hot-toast";
 
-// --- BARU: Import library xlsx ---
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 import PixelatedButton from "@/components/PixelatedButton";
 import PixelatedCard from "@/components/PixelatedCard";
@@ -57,7 +56,6 @@ export default function SendPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // State untuk menyimpan file XLSX yang diunggah
   const [xlsxFile, setXlsxFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -93,18 +91,17 @@ export default function SendPage() {
     };
   }, []);
 
-  // Fungsi untuk menangani unggahan file XLSX
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Hanya izinkan file XLSX
       if (
-        file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
+        file.type !==
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
         !file.name.endsWith(".xlsx")
       ) {
         toast.error("Please upload a valid XLSX file.");
         setXlsxFile(null);
-        event.target.value = ""; // Reset the input file
+        event.target.value = "";
         return;
       }
 
@@ -114,32 +111,40 @@ export default function SendPage() {
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
+          const workbook = XLSX.read(data, { type: "array" });
 
-          // Ambil nama sheet pertama
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(worksheet, {
+            header: 1,
+          }) as any[][];
 
-          // Konversi sheet ke JSON. header: 1 berarti baris pertama adalah header,
-          // data akan menjadi array of arrays.
-          const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-          // Asumsi alamat ada di kolom pertama (indeks 0)
-          const addresses = (json as any[][]) // Cast ke array 2D
-            .map(row => row[0]?.toString().trim()) // Ambil elemen pertama dari setiap baris dan trim
-            .filter(addr => addr && isAddress(addr)) // Filter alamat yang valid
-            .join(", "); // Gabungkan dengan koma dan spasi
+          const addresses = (json as any[][])
+            .map((row) => row[0]?.toString().trim())
+            .filter((addr) => addr && isAddress(addr))
+            .join(", ");
 
           if (addresses.length === 0) {
-            toast.error("No valid addresses found in the XLSX file or they are not in the first column.", { duration: 6000 });
+            toast.error(
+              "No valid addresses found in the XLSX file or they are not in the first column.",
+              { duration: 6000 }
+            );
             setMultiRecipientsList("");
           } else {
             setMultiRecipientsList(addresses);
-            toast.success(`Successfully loaded ${json.length - (json[0]?.length > 1 ? 1 : 0)} addresses from XLSX!`);
+            const validAddressesCount = addresses
+              .split(",")
+              .filter((addr) => addr.trim() !== "").length;
+            toast.success(
+              `Successfully loaded ${validAddressesCount} addresses from XLSX!`
+            );
           }
         } catch (error) {
           console.error("Error reading XLSX file:", error);
-          toast.error("Failed to read XLSX file. Please ensure it's a valid Excel file and addresses are in the first column.", { duration: 8000 });
+          toast.error(
+            "Failed to read XLSX file. Please ensure it's a valid Excel file and addresses are in the first column.",
+            { duration: 8000 }
+          );
           setMultiRecipientsList("");
         }
       };
@@ -149,11 +154,10 @@ export default function SendPage() {
         setMultiRecipientsList("");
       };
 
-      // Baca file sebagai ArrayBuffer karena XLSX adalah format biner
       reader.readAsArrayBuffer(file);
     } else {
       setXlsxFile(null);
-      setMultiRecipientsList(""); // Clear recipients if no file is selected
+      setMultiRecipientsList("");
     }
   };
 
@@ -217,7 +221,6 @@ export default function SendPage() {
         setRecipient("");
         setAmount("");
       } else {
-        // sendMode === 'multi'
         const recipientAddresses = multiRecipientsList
           .split(",")
           .map((addr) => addr.trim())
@@ -252,7 +255,6 @@ export default function SendPage() {
             totalAmountForContract += amountWeiPerRecipient;
           }
         } else {
-          // total_distributed
           const totalAmountWei = parseEther(amount);
           if (recipientAddresses.length === 0) {
             toast.error("Cannot distribute to zero recipients.", {
@@ -309,7 +311,6 @@ export default function SendPage() {
           return;
         }
 
-        // --- Panggil kontrak Multisender ---
         const provider = new BrowserProvider(walletClient.transport, {
           name: walletClient.chain.name,
           chainId: walletClient.chain.id,
@@ -332,7 +333,7 @@ export default function SendPage() {
           id: toastId,
           duration: 0,
         });
-        const receipt = await txResponse.wait(); // Tunggu hingga transaksi dikonfirmasi dan dapatkan receipt
+        const receipt = await txResponse.wait();
 
         toast.success(
           (t) => (
@@ -364,11 +365,12 @@ export default function SendPage() {
 
         setMultiRecipientsList("");
         setAmount("");
-        // Reset input file setelah pengiriman berhasil
         setXlsxFile(null);
-        const fileInput = document.getElementById('xlsx-upload-input') as HTMLInputElement;
+        const fileInput = document.getElementById(
+          "xlsx-upload-input"
+        ) as HTMLInputElement;
         if (fileInput) {
-          fileInput.value = '';
+          fileInput.value = "";
         }
       }
     } catch (error: any) {
@@ -425,7 +427,6 @@ export default function SendPage() {
             </div>
           )}
 
-          {/* Mode Selector (Single/Multi Send) */}
           <div className="flex justify-center mb-6 border-2 border-black">
             <button
               onClick={() => {
@@ -433,10 +434,12 @@ export default function SendPage() {
                 setAmount("");
                 setRecipient("");
                 setMultiRecipientsList("");
-                setXlsxFile(null); // Clear XLSX file selection
-                const fileInput = document.getElementById('xlsx-upload-input') as HTMLInputElement;
+                setXlsxFile(null);
+                const fileInput = document.getElementById(
+                  "xlsx-upload-input"
+                ) as HTMLInputElement;
                 if (fileInput) {
-                  fileInput.value = '';
+                  fileInput.value = "";
                 }
               }}
               className={`flex-1 p-3 font-pixel ${
@@ -453,10 +456,12 @@ export default function SendPage() {
                 setAmount("");
                 setRecipient("");
                 setMultiRecipientsList("");
-                setXlsxFile(null); // Clear XLSX file selection
-                const fileInput = document.getElementById('xlsx-upload-input') as HTMLInputElement;
+                setXlsxFile(null);
+                const fileInput = document.getElementById(
+                  "xlsx-upload-input"
+                ) as HTMLInputElement;
                 if (fileInput) {
-                  fileInput.value = '';
+                  fileInput.value = "";
                 }
               }}
               className={`flex-1 p-3 font-pixel ${
@@ -471,7 +476,6 @@ export default function SendPage() {
 
           <form onSubmit={handleSend} className="space-y-6">
             {sendMode === "single" ? (
-              // Single Send Form
               <>
                 <div>
                   <label
@@ -526,9 +530,7 @@ export default function SendPage() {
                 </div>
               </>
             ) : (
-              // Multi Send Form
               <>
-                {/* Input File XLSX */}
                 <div className="mb-4">
                   <label
                     htmlFor="xlsx-upload-input"
@@ -537,9 +539,9 @@ export default function SendPage() {
                     Upload Recipients from XLSX (first column of first sheet)
                   </label>
                   <input
-                    id="xlsx-upload-input" // Ubah ID untuk kejelasan
+                    id="xlsx-upload-input"
                     type="file"
-                    accept=".xlsx" // Hanya terima file XLSX
+                    accept=".xlsx"
                     onChange={handleFileUpload}
                     className="w-full text-white bg-stone-800 border-2 border-black p-2 cursor-pointer
                                file:mr-4 file:py-2 file:px-4
@@ -572,12 +574,12 @@ export default function SendPage() {
                     required
                   ></textarea>
                   <p className="text-xs text-stone-400 mt-1">
-                    Enter recipient addresses manually, or they will be populated from the uploaded XLSX file.
-                    Invalid addresses will be filtered out.
+                    Enter recipient addresses manually, or they will be
+                    populated from the uploaded XLSX file. Invalid addresses
+                    will be filtered out.
                   </p>
                 </div>
 
-                {/* Amount Type Selector for Multi Send */}
                 <div className="flex flex-col sm:flex-row gap-2 mb-3">
                   <button
                     type="button"
@@ -663,8 +665,8 @@ export default function SendPage() {
               {isLoading
                 ? "Sending..."
                 : sendMode === "single"
-                ? "Send Tokens"
-                : "Send Multiple Tokens"}
+                ? "Send Single"
+                : "Send Multiple"}
             </PixelatedButton>
           </form>
         </PixelatedCard>
