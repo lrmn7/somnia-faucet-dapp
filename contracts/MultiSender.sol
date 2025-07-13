@@ -13,15 +13,15 @@ contract MultiSender is Ownable {
     // Konstruktor memanggil konstruktor Ownable untuk menetapkan pengirim sebagai pemilik (owner).
     constructor() Ownable(msg.sender) {}
 
-    // Event untuk mencatat pengiriman token ke banyak penerima.
+    // Event untuk mencatat pengiriman token ke banyak penerima
     event TokensSent(address indexed sender, address payable[] recipients, uint256[] amounts, uint256 totalSent);
 
-    // Event untuk mencatat penarikan dana oleh pemilik kontrak.
+    // Event untuk mencatat penarikan dana oleh pemilik kontrak
     event FundsWithdrawn(address indexed to, uint256 amount);
 
-    // Fungsi utama untuk mengirim native token ke banyak penerima dalam satu transaksi.
-    // `_recipients` dan `_amounts` harus memiliki panjang yang sama dan tidak kosong.
-    // `msg.value` harus sama dengan jumlah total yang akan dikirim.
+    // Fungsi utama untuk mengirim native token ke banyak penerima dalam satu transaksi
+    // `_recipients` dan `_amounts` harus memiliki panjang yang sama dan tidak kosong
+    // `msg.value` harus sama dengan jumlah total yang akan dikirim
     function multiSendNative(
         address payable[] calldata _recipients,
         uint256[] calldata _amounts

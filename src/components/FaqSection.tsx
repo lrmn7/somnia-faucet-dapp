@@ -23,7 +23,22 @@ const FaqSection = () => {
       q: "How does the Multi Send feature work, and what file formats are supported?",
       a: (
         <>
-          The <span className="font-semibold text-brand-orange">Multi Send</span> feature lets you send STT testnet tokens to multiple recipient addresses in a single transaction, saving you time and gas fees compared to sending individually. You can either paste a comma-separated list of addresses directly into the text area or upload an <span className="font-semibold text-brand-orange">XLSX (Excel) file</span>. When uploading an XLSX file, the dApp will automatically read the wallet addresses from the <span className="font-semibold text-brand-orange">first column (Column A) of the first sheet</span> in your Excel file. Invalid addresses will be filtered out.
+          The{" "}
+          <span className="font-semibold text-brand-orange">Multi Send</span>{" "}
+          feature lets you send STT testnet tokens to multiple recipient
+          addresses in a single transaction, saving you time and gas fees
+          compared to sending individually. You can either paste a
+          comma-separated list of addresses directly into the text area or
+          upload an{" "}
+          <span className="font-semibold text-brand-orange">
+            XLSX (Excel) file
+          </span>
+          . When uploading an XLSX file, the dApp will automatically read the
+          wallet addresses from the{" "}
+          <span className="font-semibold text-brand-orange">
+            first column (Column A) of the first sheet
+          </span>{" "}
+          in your Excel file. Invalid addresses will be filtered out.
         </>
       ),
     },
@@ -34,10 +49,24 @@ const FaqSection = () => {
           In Multi Send, you have two options for specifying the amount:
           <ul className="list-disc list-inside mt-2 space-y-1">
             <li>
-              <span className="font-semibold text-brand-orange">Amount Per Recipient:</span> If you choose this, the amount you enter will be sent to *each* address in your recipient list. For example, if you enter "0.1" and have 5 recipients, each of the 5 recipients will receive 0.1 STT, totaling 0.5 STT sent from your wallet.
+              <span className="font-semibold text-brand-orange">
+                Amount Per Recipient:
+              </span>{" "}
+              If you choose this, the amount you enter will be sent to *each*
+              address in your recipient list. For example, if you enter "0.1"
+              and have 5 recipients, each of the 5 recipients will receive 0.1
+              STT, totaling 0.5 STT sent from your wallet.
             </li>
             <li>
-              <span className="font-semibold text-brand-orange">Total Amount (Distribute):</span> With this option, the amount you enter will be *divided equally* among all recipients in your list. For example, if you enter "1.0" and have 5 recipients, each recipient will receive 0.2 STT (1.0 divided by 5). Any remainder from the division (due to integer arithmetic) will be added to the first recipient's share to ensure the total amount is sent.
+              <span className="font-semibold text-brand-orange">
+                Total Amount (Distribute):
+              </span>{" "}
+              With this option, the amount you enter will be *divided equally*
+              among all recipients in your list. For example, if you enter "1.0"
+              and have 5 recipients, each recipient will receive 0.2 STT (1.0
+              divided by 5). Any remainder from the division (due to integer
+              arithmetic) will be added to the first recipient's share to ensure
+              the total amount is sent.
             </li>
           </ul>
           Choose the option that best fits how you want to distribute tokens.
@@ -72,9 +101,7 @@ const FaqSection = () => {
   return (
     <section className="py-16 bg-stone-900/50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-pixel text-center mb-10">
-          FAQ
-        </h2>
+        <h2 className="text-3xl font-pixel text-center mb-10">FAQ</h2>
         <div className="max-w-3xl mx-auto space-y-4">
           {faqs.map((faq, i) => (
             <div key={i} className="border-2 border-black bg-stone-900">
@@ -84,11 +111,13 @@ const FaqSection = () => {
               >
                 {faq.q}
                 <span className="text-white text-2xl">
-                  {openFaqIndex === i ? '−' : '+'}
+                  {openFaqIndex === i ? "−" : "+"}
                 </span>
               </button>
               {openFaqIndex === i && (
-                <div className="p-5 pt-0"> {/* Adjusted padding for better flow */}
+                <div className="p-5 pt-0">
+                  {" "}
+                  {/* Adjusted padding for better flow */}
                   <p className="text-stone-300 leading-relaxed border-t-2 border-stone-700 pt-5">
                     {faq.a}
                   </p>

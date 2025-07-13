@@ -5,9 +5,7 @@ contract Somtool {
     address public owner;
     uint256 public claimAmount;
     uint256 public cooldownTime;
-
     mapping(address => uint256) public nextClaimTime;
-
     event Claimed(address indexed receiver, uint256 amount);
     event Deposited(address indexed sender, uint256 amount);
     event Withdrawn(address indexed receiver, uint256 amount);
@@ -44,7 +42,7 @@ contract Somtool {
 
         emit Withdrawn(owner, balance);
     }
-    
+
     receive() external payable {
         emit Deposited(msg.sender, msg.value);
     }
