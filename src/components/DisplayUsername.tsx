@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getUsername } from '../lib/getusername';
+import { useEffect, useState } from "react";
+import { getUsername } from "../lib/getusername";
 
 interface DisplayUsernameProps {
   address: `0x${string}`;
@@ -7,10 +7,12 @@ interface DisplayUsernameProps {
 
 const DisplayUsername = ({ address }: DisplayUsernameProps) => {
   const [username, setUsername] = useState<string | null>(null);
-  const shortAddress = `${address.substring(0, 4)}...${address.substring(address.length - 4)}`;
+  const shortAddress = `${address.substring(0, 4)}...${address.substring(
+    address.length - 4
+  )}`;
 
   useEffect(() => {
-    let isMounted = true; 
+    let isMounted = true;
 
     const fetchUsername = async () => {
       const name = await getUsername(address);
