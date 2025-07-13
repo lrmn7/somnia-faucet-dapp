@@ -24,6 +24,8 @@ export default function AdminPage() {
     const [newClaimAmount, setNewClaimAmount] = useState('');
     const [newCooldown, setNewCooldown] = useState('');
     const [multisenderWithdrawRecipient, setMultisenderWithdrawRecipient] = useState('');
+    const [multisenderDepositAmount, setMultisenderDepositAmount] = useState('');
+
 
     // --- Data Faucet ---
     const { data: faucetBalance, refetch: refetchFaucetBalance } = useBalance({ address: FAUCET_ADDRESS });
@@ -158,6 +160,32 @@ export default function AdminPage() {
         }
     };
 
+    // --- Handler BARU untuk Multisender Deposit ---
+    const handleMultisenderDeposit = async () => {
+        if (!multisenderDepositAmount || parseFloat(multisenderDepositAmount) <= 0) {
+            toast.error('Please enter a valid amount to deposit to Multisender.');
+            return;
+        }
+        if (MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+            toast.error("Multisender contract address is not configured. Cannot deposit.", { duration: 5000 });
+            return;
+        }
+
+        const toastId = toast.loading('Sending STT to Multisender...');
+        try {
+            await sendTransactionAsync({
+                to: MULTISENDER_CONTRACT_ADDRESS,
+                value: parseEther(multisenderDepositAmount),
+            });
+            toast.success('Deposit to Multisender successful!', { id: toastId });
+            setMultisenderDepositAmount('');
+            refetchMultisenderBalance();
+        } catch (error: any) {
+            console.error(error);
+            toast.error(`Multisender deposit failed: ${error.shortMessage || error.message}`, { id: toastId });
+        }
+    };
+
     // --- Handler untuk Multisender Withdrawal ---
     const handleWithdrawStuckFunds = async () => {
         if (!multisenderBalance || multisenderBalance.value === BigInt(0)) {
@@ -166,6 +194,10 @@ export default function AdminPage() {
         }
         if (!multisenderWithdrawRecipient || !isAddress(multisenderWithdrawRecipient)) { 
             toast.error('Please enter a valid recipient address for withdrawal.', { duration: 5000 });
+            return;
+        }
+        if (MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+            toast.error("Multisender contract address is not configured. Cannot withdraw.", { duration: 5000 });
             return;
         }
 
@@ -301,7 +333,27 @@ export default function AdminPage() {
                         {multisenderBalance ? `${formatEther(multisenderBalance.value)} ${multisenderBalance.symbol}` : 'Loading...'}
                     </span>
                 </p>
-                <h2 className="text-2xl mb-4">Withdraw Stuck Multisender Funds</h2>
+                {/* --- Deposit STT to Multisender --- */}
+                <h2 className="text-2xl mb-4 mt-6">Deposit STT to Multisender</h2>
+                <p className="mb-4">
+                    Deposit STT directly to the Multisender contract. These funds will be held in the contract until used for multi-send transactions or withdrawn by the owner.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <input
+                        type="number"
+                        value={multisenderDepositAmount}
+                        onChange={(e) => setMultisenderDepositAmount(e.target.value)}
+                        placeholder="Amount in STT"
+                        className="flex-grow bg-stone-900 text-white p-3 border-2 border-black focus:outline-none focus:border-orange-400"
+                    />
+                    <PixelatedButton onClick={handleMultisenderDeposit}>Deposit</PixelatedButton>
+                </div>
+                {MULTISENDER_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" && (
+                    <p className="mt-2 text-xs text-red-400 text-center">Multisender contract address is not configured. Please set NEXT_PUBLIC_MULTISENDER_CONTRACT_ADDRESS in .env.local</p>
+                )}
+
+
+                <h2 className="text-2xl mb-4 mt-6">Withdraw Stuck Multisender Funds</h2>
                 <p className="mb-4">
                     This function allows the contract owner to withdraw any STT that got stuck in the Multisender contract (e.g., from overpayments or accidental direct transfers).
                 </p>
