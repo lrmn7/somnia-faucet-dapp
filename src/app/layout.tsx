@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "SOMT👀L: Your Somnia Testnet Toolkit",
+    title: "Your Somnia Testnet Toolkit",
     description: "All your Somnia Testnet essentials in one place: faucet, multi-sender, and contract deployment.",
     url: "https://somtool.vercel.app/",
     siteName: "SOMT👀L",
