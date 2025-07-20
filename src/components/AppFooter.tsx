@@ -29,11 +29,11 @@ const AppFooter = () => {
     {
       title: 'More dApps',
       links: [
-        { href: 'https://auctsom.vercel.app', label: 'AuctSom', isExternal: true },
-        { href: 'https://funquiz.vercel.app/', label: 'FunQuiz', isExternal: true },
-        { href: 'https://funmint.vercel.app/', label: 'FunMint', isExternal: true },
-        { href: 'https://somfeed.vercel.app/', label: 'Somfeed', isExternal: true },
-        { href: 'https://gsomnia-clicks.vercel.app/', label: 'gSomnia Clicks', isExternal: true },
+        { href: 'https://auctsom.lrmn.link', label: 'AuctSom', isExternal: true },
+        { href: 'https://fun-quiz.fun', label: 'FunQuiz', isExternal: true },
+        { href: 'https://funmint.lrmn.link', label: 'FunMint', isExternal: true },
+        { href: 'https://somfeed.lrmn.link', label: 'Somfeed', isExternal: true },
+        { href: 'https://gsomnia.lrmn.link', label: 'gSomnia Clicks', isExternal: true },
       ],
     },
   ];

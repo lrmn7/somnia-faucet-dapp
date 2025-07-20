@@ -19,7 +19,7 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section className="text-center py-16">
+    <section className="text-center py-16 mt-14">
       <p className="text-gray-400 text-sm mb-2">{greeting}</p>
       <h1 className="text-5xl md:text-6xl mb-6">Welcome To SOMT👀L</h1>
       <p className="text-lg mb-8 max-w-3xl mx-auto">

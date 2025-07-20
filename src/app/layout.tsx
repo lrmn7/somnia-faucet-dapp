@@ -4,6 +4,10 @@ import "@/styles/globals.css";
 import dynamic from "next/dynamic";
 import AppNavbar from "@/components/AppNavbar";
 import AppFooter from "@/components/AppFooter";
+import { CustomCursor } from '@/components/custom-cursor'
+import Loader from "@/components/Loader";
+import { usePathname } from "next/navigation"; // Tambahkan ini
+import AppLoaderWrapper from "@/components/AppLoaderWrapper";
 // import AlertBanner from "@/components/AlertBanner";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -77,12 +81,14 @@ export default function RootLayout({
       <body className={inter.className}>
         <ClientOnlyProviders>
           <div className="flex flex-col min-h-screen">
+            <AppLoaderWrapper />
             {/* <AlertBanner /> */}
             <AppNavbar />
             <main className="flex-grow container mx-auto px-4 py-8">
               {children}
             </main>
             <AppFooter />
+            <CustomCursor />
           </div>
         </ClientOnlyProviders>
       </body>
