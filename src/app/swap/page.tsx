@@ -15,14 +15,14 @@ import toast from "react-hot-toast";
 import PixelatedButton from "@/components/PixelatedButton";
 import PixelatedCard from "@/components/PixelatedCard";
 
-const POOL_ADDRESS = "0x47eBA9C4dae2783B8400f315468FA9c6AE9c88D1";
+const POOL_ADDRESS = "0x5eFF5165Ef3DDe191cc4904eb1b88b6828049986";
 const SOMNIA_TESTNET_CHAIN_ID = 50312;
 
 const TOKEN_LIST = [
+  { address: "0xcD94cf69f1A422d060Aea418205c65eFC843C5a6", symbol: "SMTL" },
   { address: "0x9EB0A05d9636d17A44D236547F060C2BB9BD67be", symbol: "IDR" },
   { address: "0x1947953bDb113315c7f5D00ffC918f2Bc9486e42", symbol: "USDT" },
   { address: "0x31CC39311c042fd151D120eA34Cec268E6D565a9", symbol: "USDC" },
-  { address: "0xcD94cf69f1A422d060Aea418205c65eFC843C5a6", symbol: "SMTL" },
 ];
 
 const USDT_FAUCET_ADDRESS = "0xcD94cf69f1A422d060Aea418205c65eFC843C5a6";
@@ -91,8 +91,10 @@ export default function SwapPage() {
   const [amountB, setAmountB] = useState("");
   const [lastEdited, setLastEdited] = useState<"A" | "B">("A");
   const [cooldown, setCooldown] = useState(0);
-  
-  const [activeToastId, setActiveToastId] = useState<string | undefined>(undefined);
+
+  const [activeToastId, setActiveToastId] = useState<string | undefined>(
+    undefined
+  );
 
   const { data: balanceIn, refetch: refetchBalanceIn } = useBalance({
     address,
@@ -162,7 +164,12 @@ export default function SwapPage() {
     ) {
       const reserveIn = reserves[tokenInAddress.toLowerCase()];
       const reserveOut = reserves[tokenOutAddress.toLowerCase()];
-      if (!reserveIn || !reserveOut || reserveIn === BigInt(0) || reserveOut === BigInt(0)) {
+      if (
+        !reserveIn ||
+        !reserveOut ||
+        reserveIn === BigInt(0) ||
+        reserveOut === BigInt(0)
+      ) {
         setAmountOut("0");
         return;
       }
@@ -189,7 +196,8 @@ export default function SwapPage() {
     if (mode !== "liquidity" || Object.keys(reserves).length === 0) return;
     const reserveA = reserves[liquidityTokenA.toLowerCase()];
     const reserveB = reserves[liquidityTokenB.toLowerCase()];
-    if (!reserveA || !reserveB || reserveA === BigInt(0) || reserveB === BigInt(0)) return;
+    if (!reserveA || !reserveB || reserveA === BigInt(0) || reserveB === BigInt(0))
+      return;
     if (lastEdited === "A" && amountA) {
       const amountABigInt = parseUnits(amountA, balanceA?.decimals || 18);
       const calculatedAmountB = (amountABigInt * reserveB) / reserveA;
@@ -244,20 +252,20 @@ export default function SwapPage() {
       refetchPoolState();
       refetchLastClaim();
     }
-  }, [isConfirming, isSubmitting, hash, activeToastId]);
+  }, [isConfirming, isSubmitting, hash, activeToastId, refetchAllowanceIn, refetchBalanceIn, refetchPoolState, refetchBalanceA, refetchBalanceB, refetchAllowanceA, refetchAllowanceB, refetchLastClaim]);
 
   const needsApprovalSwap = useMemo(() => {
-    if (mode !== "swap" || !amountIn || !allowanceIn) return false;
+    if (mode !== "swap" || !amountIn || allowanceIn === undefined) return false;
     return allowanceIn < parseUnits(amountIn, balanceIn?.decimals || 18);
   }, [mode, amountIn, allowanceIn, balanceIn?.decimals]);
 
   const needsApprovalA = useMemo(() => {
-    if (mode !== "liquidity" || !amountA || !allowanceA) return false;
+    if (mode !== "liquidity" || !amountA || allowanceA === undefined) return false;
     return allowanceA < parseUnits(amountA, balanceA?.decimals || 18);
   }, [mode, amountA, allowanceA, balanceA?.decimals]);
 
   const needsApprovalB = useMemo(() => {
-    if (mode !== "liquidity" || !amountB || !allowanceB) return false;
+    if (mode !== "liquidity" || !amountB || allowanceB === undefined) return false;
     return allowanceB < parseUnits(amountB, balanceB?.decimals || 18);
   }, [mode, amountB, allowanceB, balanceB?.decimals]);
 
@@ -270,10 +278,10 @@ export default function SwapPage() {
               abi: erc20Abi,
               address: tokenInAddress as `0x${string}`,
               functionName: "approve",
-              args: [
-                POOL_ADDRESS,
-                parseUnits(amountIn, balanceIn?.decimals || 18),
-              ],
+args: [
+  POOL_ADDRESS,
+  BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+],
             })
         : () =>
             writeContractAsync({
@@ -293,7 +301,10 @@ export default function SwapPage() {
             abi: erc20Abi,
             address: liquidityTokenA as `0x${string}`,
             functionName: "approve",
-            args: [POOL_ADDRESS, parseUnits(amountA, balanceA?.decimals || 18)],
+            args: [
+              POOL_ADDRESS,
+              BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+            ],
           });
       } else if (needsApprovalB) {
         action = () =>
@@ -301,7 +312,10 @@ export default function SwapPage() {
             abi: erc20Abi,
             address: liquidityTokenB as `0x${string}`,
             functionName: "approve",
-            args: [POOL_ADDRESS, parseUnits(amountB, balanceB?.decimals || 18)],
+            args: [
+              POOL_ADDRESS,
+              BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+            ],
           });
       } else {
         const allTokenAddresses = (poolState as any[])?.[0] || [];
@@ -338,7 +352,7 @@ export default function SwapPage() {
     } catch (error: any) {
       toast.dismiss(toastId);
       setActiveToastId(undefined);
-      
+
       console.error(error);
       if (error.shortMessage !== "User rejected the request.") {
         toast.error(error.shortMessage || "An error occurred.");
@@ -377,6 +391,14 @@ export default function SwapPage() {
     const isDisabled =
       !isConnected || isProcessing || !amountIn || hasInsufficientBalance;
 
+    const filteredTokenListIn = TOKEN_LIST.filter(
+      (token) => token.address.toLowerCase() !== tokenOutAddress.toLowerCase()
+    );
+
+    const filteredTokenListOut = TOKEN_LIST.filter(
+      (token) => token.address.toLowerCase() !== tokenInAddress.toLowerCase()
+    );
+
     return (
       <>
         <div className="bg-stone-900 p-4 border-2 border-black space-y-2">
@@ -399,7 +421,7 @@ export default function SwapPage() {
               onChange={(e) => setTokenInAddress(e.target.value)}
               className="bg-stone-900 border-2 border-black p-2 font-pixel focus:outline-none"
             >
-              {TOKEN_LIST.map((token) => (
+              {filteredTokenListIn.map((token) => (
                 <option key={token.address} value={token.address}>
                   {token.symbol}
                 </option>
@@ -434,7 +456,7 @@ export default function SwapPage() {
               onChange={(e) => setTokenOutAddress(e.target.value)}
               className="bg-stone-900 border-2 border-black p-2 font-pixel focus:outline-none"
             >
-              {TOKEN_LIST.map((token) => (
+              {filteredTokenListOut.map((token) => (
                 <option key={token.address} value={token.address}>
                   {token.symbol}
                 </option>
@@ -463,14 +485,20 @@ export default function SwapPage() {
               : !amountIn
               ? "Enter an amount"
               : needsApprovalSwap
-              ? "Approve"
+              ? `Approve ${
+                  TOKEN_LIST.find(
+                    (t) =>
+                      t.address.toLowerCase() === tokenInAddress.toLowerCase()
+                  )?.symbol || "Token"
+                }`
               : "Swap"}
           </PixelatedButton>
         </div>
       </>
     );
   };
-
+  
+  // --- FUNGSI INI TELAH DIPERBAIKI ---
   const renderLiquidity = () => {
     const hasInsufficientBalanceA =
       balanceA && amountA
@@ -487,6 +515,16 @@ export default function SwapPage() {
       !amountB ||
       hasInsufficientBalanceA ||
       hasInsufficientBalanceB;
+
+    // Membuat daftar token yang difilter untuk kolom A
+    const filteredTokenListA = TOKEN_LIST.filter(
+      (token) => token.address.toLowerCase() !== liquidityTokenB.toLowerCase()
+    );
+
+    // Membuat daftar token yang difilter untuk kolom B
+    const filteredTokenListB = TOKEN_LIST.filter(
+      (token) => token.address.toLowerCase() !== liquidityTokenA.toLowerCase()
+    );
 
     return (
       <>
@@ -513,7 +551,7 @@ export default function SwapPage() {
               onChange={(e) => setLiquidityTokenA(e.target.value)}
               className="bg-stone-900 border-2 border-black p-2 font-pixel focus:outline-none"
             >
-              {TOKEN_LIST.map((token) => (
+              {filteredTokenListA.map((token) => (
                 <option key={token.address} value={token.address}>
                   {token.symbol}
                 </option>
@@ -545,7 +583,7 @@ export default function SwapPage() {
               onChange={(e) => setLiquidityTokenB(e.target.value)}
               className="bg-stone-900 border-2 border-black p-2 font-pixel focus:outline-none"
             >
-              {TOKEN_LIST.map((token) => (
+              {filteredTokenListB.map((token) => (
                 <option key={token.address} value={token.address}>
                   {token.symbol}
                 </option>
