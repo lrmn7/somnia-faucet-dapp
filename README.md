@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lrmn7/somtool/main/public/og-image.png" alt="SOMT👀L" width="600"/>
+</p>
 
-## Getting Started
+<h1 align="center">👀 Welcome to SOMT👀L</h1>
+<p align="center"><em>Dive into Somnia Testnet: Everything You Need, Made Playful.</em></p>
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Overview
+
+**SOMT👀L** is a testnet dApp built on the [Somnia Network](https://somnia.network), designed to help developers and testers interact with the STT token in a fun and efficient way. It includes:
+
+## 🔧 Features
+
+- 🧴 Faucet
+- 🔁 Swap
+- 🧱 Deploy ERC20/ERC721
+- 📤 Single/Multi Sender
+- 🔐 Admin
+---
+
+## 🛡️ Safety First
+
+- No private key access required.
+- Fully open-source and transparent.
+- Tokens are **testnet only** — no real monetary value.
+
+---
+
+## 🧠 Tech Stack
+
+- 🟡 Hardhat
+- 🔵 TypeScript
+- 🟢 Node.js
+- 🌐 Ethers.js
+- 🧩 XLSX Parser
+
+---
+
+## 📁 Project Structure
+
+```
+contracts/
+├─ hardhat/
+│  ├─ artifacts/
+│  ├─ cache/
+│  ├─ node_modules/
+│  ├─ typechain-types/
+│  └─ .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> These folders are excluded in `.gitignore` to keep your repository clean.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## 🧪 Disclaimer
 
-## Learn More
+All features are for **testing purposes only** on the Somnia Testnet.  
+No STT token distributed here holds any real-world value.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🧑‍💻 Contribute
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Pull requests are welcome!  
+Feel free to open an issue if you find a bug or have a feature request.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+<p align="center">
+  Built with ❤️ for the Somnia Community
+</p>
