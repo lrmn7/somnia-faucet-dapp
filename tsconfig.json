@@ -34,10 +34,11 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "contracts",
+    "node_modules",
+    "hardhat",
     "contracts/hardhat",
-    "**/artifacts",
-    "**/cache",
-    "**/typechain-types"
+    "artifacts",
+    "cache",
+    "typechain-types"
   ]
 }
