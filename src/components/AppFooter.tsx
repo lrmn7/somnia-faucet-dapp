@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { FaGithub, FaXTwitter } from 'react-icons/fa6';
+// --- PERUBAHAN: Menambahkan import untuk ikon Admin ---
+import { FaGithub, FaXTwitter, FaUserShield } from 'react-icons/fa6';
 
 type FooterLink = {
   href: string;
@@ -19,21 +20,20 @@ const AppFooter = () => {
     {
       title: 'Useful Links',
       links: [
+        { href: '/swap', label: 'Swap' },
         { href: '/deploy', label: 'Deploy' },
-        { href: '/faucet', label: 'Faucet' },
         { href: '/send', label: 'Send' },
-        { href: '/admin', label: 'Admin' },
+        { href: '/faucet', label: 'Faucet' },
+        { href: '/checker', label: 'Checker' },
         { href: '/', label: 'Home' },
       ],
     },
     {
-      title: 'More dApps',
+      title: 'Recommended Links',
       links: [
-        { href: 'https://auctsom.lrmn.link', label: 'AuctSom', isExternal: true },
         { href: 'https://fun-quiz.fun', label: 'FunQuiz', isExternal: true },
-        { href: 'https://funmint.lrmn.link', label: 'FunMint', isExternal: true },
         { href: 'https://somfeed.lrmn.link', label: 'Somfeed', isExternal: true },
-        { href: 'https://gsomnia.lrmn.link', label: 'gSomnia Clicks', isExternal: true },
+        { href: 'https://somnia.lrmn.link', label: 'More Dapps', isExternal: true },
       ],
     },
   ];
@@ -41,6 +41,7 @@ const AppFooter = () => {
   const socialLinks = [
     { href: 'https://github.com/lrmn7', label: 'GitHub', icon: <FaGithub /> },
     { href: 'https://x.com/romanromannya', label: 'Twitter', icon: <FaXTwitter /> },
+    { href: '/admin', label: 'Admin', icon: <FaUserShield /> },
   ];
 
   return (
@@ -96,7 +97,9 @@ const AppFooter = () => {
               <a
                 key={social.label}
                 href={social.href}
-                target="_blank"
+                // Jika ini link internal, Anda mungkin tidak ingin target="_blank"
+                // Tapi untuk menjaga konsistensi dengan permintaan, saya biarkan
+                target={social.label !== 'Admin' ? '_blank' : '_self'}
                 rel="noopener noreferrer"
                 aria-label={social.label}
                 className="text-2xl hover:text-brand-orange transition-colors"

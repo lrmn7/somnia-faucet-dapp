@@ -104,7 +104,7 @@ export default function DeployPage() {
 
       const address = await deployedContract.getAddress();
       setDeployedAddress(address);
-      toast.success(`Deployment successful! Contract Address: ${address}`, {
+      toast.success(`Deployment successful!`, {
         id: toastId,
       });
     } catch (error: any) {

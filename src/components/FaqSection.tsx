@@ -1,9 +1,8 @@
-"use client"; // Pastikan ini ada di baris paling atas jika menggunakan komponen sisi klien
+"use client";
 
-import { useState } from "react"; // Import useState
+import { useState } from "react";
 
 const FaqSection = () => {
-  // --- BARU: State untuk melacak FAQ yang sedang terbuka ---
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const toggleFaq = (index: number) => {
@@ -13,7 +12,7 @@ const FaqSection = () => {
   const faqs = [
     {
       q: "How does the Faucet work?",
-      a: "The faucet provides 0.5 STT testnet tokens for free. You can claim them once every 24 hours to use for transaction fees on the Somnia Testnet.",
+      a: "The faucet provides 0.3 STT testnet tokens for free. You can claim them once every 24 hours to use for transaction fees on the Somnia Testnet.",
     },
     {
       q: "What is the 'Send' page and Leaderboard for?",

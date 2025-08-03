@@ -13,6 +13,21 @@ ignition/deployments/chain-50312
 /.pnp
 .pnp.js
 
+# Hardhat build outputs
+contracts/hardhat/artifacts/
+contracts/hardhat/cache/
+contracts/hardhat/typechain-types/
+contracts/hardhat/.env
+contracts/hardhat/package-lock.json
+contracts/hardhat/yarn.lock
+# Node modules
+contracts/hardhat/node_modules/
+
+# Optional: ignore system files or logs
+.DS_Store
+.env
+*.log
+
 # testing
 /coverage
 /coverage.json
