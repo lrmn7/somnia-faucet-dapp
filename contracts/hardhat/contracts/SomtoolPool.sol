@@ -124,8 +124,7 @@ contract MultiSomtoolPool is ReentrancyGuard {
 
         IERC20(_tokenOut).transfer(msg.sender, amountOut);
         
-        _updateReserve(_tokenIn);
-        _updateReserve(_tokenOut);
+        _updateAllReserves();
 
         emit Swapped(msg.sender, _tokenIn, _amountIn, _tokenOut, amountOut);
     }
